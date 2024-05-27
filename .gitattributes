@@ -1,0 +1,8 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Stop all normalization for:
+*.ps1 -text
+*.bat -text
+*.cmd -text
+*.sln -text

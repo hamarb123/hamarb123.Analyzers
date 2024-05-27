@@ -1,0 +1,12 @@
+﻿<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Target Name="ConfigureHamarb123AnalyzersMSBuildProperties" BeforeTargets="PrepareForBuild">
+		<ItemGroup>
+			<!--Make property visible to roslyn-->
+			<CompilerVisibleProperty Include="Hamarb123AnalyzersDiagnosticsIncludeList" />
+		</ItemGroup>
+		<PropertyGroup>
+			<!--Ensure there are no newlines in the input-->
+			<Hamarb123AnalyzersDiagnosticsIncludeList>$([System.Text.RegularExpressions.Regex]::Replace($(Hamarb123AnalyzersDiagnosticsIncludeList), '[\r\n\s]+', ' '))</Hamarb123AnalyzersDiagnosticsIncludeList>
+		</PropertyGroup>
+	</Target>
+</Project>
