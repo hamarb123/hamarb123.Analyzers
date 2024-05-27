@@ -7,6 +7,16 @@ NuGet link:
 [![NuGet version (hamarb123.Analyzers)](https://img.shields.io/nuget/v/hamarb123.Analyzers.svg?style=flat-square)](https://www.nuget.org/packages/hamarb123.Analyzers/)
 
 
+## Configuration
+
+You can use the MSBuild property `Hamarb123AnalyzersDiagnosticsIncludeList` to specify an include-list of analysers to run if that's your preference.
+
+For example:
+```xml
+<Hamarb123AnalyzersDiagnosticsIncludeList>HAM0001;HAM0003</Hamarb123AnalyzersDiagnosticsIncludeList>
+```
+
+
 ## Defensive Copies Analysers (C# Only)
 
 A defensive copy is something the C# compiler emits in some scenarios to ensure that readonly memory is not mutated.
