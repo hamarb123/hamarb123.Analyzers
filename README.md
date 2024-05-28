@@ -1,7 +1,7 @@
 # hamarb123.Analyzers
 A bunch of analysers I find useful - including a defensive copies analyser.
 
-See [Shipped Analysers](hamarb123.Analyzers/AnalyzerReleases.Shipped.md) for the list of analysers included.
+See [Shipped Analysers](hamarb123.Analyzers/AnalyzerReleases.Shipped.md) on GitHub for the list of analysers included.
 
 NuGet link:
 [![NuGet version (hamarb123.Analyzers)](https://img.shields.io/nuget/v/hamarb123.Analyzers.svg?style=flat-square)](https://www.nuget.org/packages/hamarb123.Analyzers/)
