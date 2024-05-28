@@ -40,7 +40,22 @@ struct Struct1
 Analysers are included to catch where these occur:
 - `HAM0001` (warning) where it's meaningfully different behaviour.
 - `HAM0003` (info) where it's known to be only unnecessary.
-- A precise definition is given [here](hamarb123.Analyzers/DefensiveCopies/DefensiveCopyAnalyzer.cs) - before opening an issue, please check it against this definition.
+
+Idea behind the below precise definition:
+- I consider a defensive copy to basically be: whenever a copy is made as a result of memory not being mutable, that results in a meaningful behavioural difference.
+- For classes, this is never the case, since `this` is not passed by-reference for them (therefore, whether a copy was made of `this` before calling is irrelevant).
+- When calling members on structs cause a defensive copy to be made, there is a meaningful difference since `this` is passed by-reference, and therefore a different `this` is received.
+- In practical terms though, members that are known to have `readonly` implementations on `struct`s only cause a performance difference (hence why these are `HAM0003` (info) instead of `HAM0001` (warning)).
+
+Precise definition of defensive copy (`HAM0001`):
+- A copy of some readonly memory (LHS) is made, so a potentially mutating member (RHS) (which will be a method in IL) can be called.
+  - This requires that wrapping `Unsafe.AsRef` around LHS would elide the copy (otherwise, it's not a defensive copy, just a copy), ignoring safety and issue of `ref struct`s in generics for a moment.
+- If call is on a guaranteed non-`valuetype`, then it's never a defensive copy (since call to method on defensive copy of `class` is not observable).
+- If member implementation is known to be actually `readonly` (includes `constrained` implementations on known `struct` types that don't override it), then it is instead a `HAM0003` defensive copy.
+- "Actually `readonly` member" definition:
+  - Based on metadata information only, no source info or special knowledge (other than what is guaranteed by runtime) is allowed.
+  - Not marked `readonly`, or otherwise causes a defensive copy.
+  - It must be possible to safely elide the defensive copy with `Unsafe.AsRef` (ignoring issue of `ref struct`s in generics), when assuming that the memory location it's stored in is truly `readonly`.
 
 
 ## Non-Ordinal String APIs Analyser
@@ -62,14 +77,14 @@ class Class1
 
 ## Nullable If Analyser (VB.NET Only)
 
-In VB.NET, `Boolean?` can be used directly in `If`, ternary, etc. - this often leads to undesirable behaviour - this analyser (`HAM0002`) warns on those.
+In VB.NET, `Boolean?` can be used directly in `If`, ternary, etc. - this often leads to unexpected behaviour for those familiar with C# - this analyser (`HAM0002`) warns on those.
 
 For example:
 ```vb
 Class Class1
 	Public Sub M1(str As String)
 		If str?.GetHashCode() <> 0 Then
-			'This branch is not taken when str is Nothing, even though `str?.GetHashCode()` looks like it should give `Nothing` which is indeed `<> 0`
+			'This branch is not taken when str is Nothing, even though `str?.GetHashCode()` looks like it should give `Nothing` which is indeed not `0`
 		End If
 	End Sub
 End Class

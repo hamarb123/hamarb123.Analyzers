@@ -52,14 +52,6 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		context.RegisterSyntaxNodeAction(AnalyzeFixedStatement, SyntaxKind.FixedStatement);
 	}
 
-	/*
-		Definition of defensive copy (HAM0001):
-		- Copy of readonly memory, so it can call a mutating member.
-		- If call is on a guaranteed non-struct, then it's never a defensive copy.
-		- If member is readonly (includes constrained implementations on known struct types that don't override it), then it only counts as a HAM0003 defensive copy.
-		- If the member is truly readonly, but just not marked readonly, it must be possible to elide the defensive copy with Unsafe.AsRef, otherwise, no diagnostic is reported.
-	*/
-
 	private static void AnalyzePropertyReference(OperationAnalysisContext context)
 	{
 		//check if it should run
