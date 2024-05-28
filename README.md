@@ -7,6 +7,13 @@ NuGet link:
 [![NuGet version (hamarb123.Analyzers)](https://img.shields.io/nuget/v/hamarb123.Analyzers.svg?style=flat-square)](https://www.nuget.org/packages/hamarb123.Analyzers/)
 
 
+## Table Of Contents
+- [Configuration](#configuration)
+- [Defensive Copies Analysers (C# Only)](#defensive-copies-analysers-c-only)
+- [Non-Ordinal String APIs Analyser](#non-ordinal-string-apis-analyser)
+- [Nullable If Analyser (VB.NET Only)](#nullable-if-analyser-vbnet-only)
+
+
 ## Configuration
 
 You can use the MSBuild property `Hamarb123AnalyzersDiagnosticsIncludeList` to specify an include-list of analysers to run if that's your preference.
