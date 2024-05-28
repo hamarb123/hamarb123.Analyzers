@@ -49,10 +49,10 @@ Analysers are included to catch where these occur:
 - `HAM0003` (info) where it's known to be only unnecessary.
 
 Idea behind the below precise definition:
-- I consider a defensive copy to basically be: whenever a copy is made as a result of memory not being mutable, that results in a meaningful behavioural difference.
+- I consider a defensive copy to basically be: whenever a copy is made as a result of memory not being mutable, that results in a meaningful behavioural difference (compared to if the memory was mutable).
 - For classes, this is never the case, since `this` is not passed by-reference for them (therefore, whether a copy was made of `this` before calling is irrelevant).
 - When calling members on structs cause a defensive copy to be made, there is a meaningful difference since `this` is passed by-reference, and therefore a different `this` is received.
-- In practical terms though, members that are known to have `readonly` implementations on `struct`s only cause a performance difference (hence why these are `HAM0003` (info) instead of `HAM0001` (warning)).
+- In practical terms though, members that are known to have `readonly` implementations on `struct`s only cause an IL size and/or performance difference (hence why these are `HAM0003` (info) instead of `HAM0001` (warning)).
 
 Precise definition of defensive copy (`HAM0001`):
 - A copy of some readonly memory (LHS) is made, so a potentially mutating member (RHS) (which will be a method in IL) can be called.
