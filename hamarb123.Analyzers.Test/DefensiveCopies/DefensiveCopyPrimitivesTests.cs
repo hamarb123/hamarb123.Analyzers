@@ -29,7 +29,8 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					ref IntPtr value12, ref UIntPtr value13,
 					ref decimal value14, ref DateTime value15,
 					ref nint value16, ref nuint value17,
-					ref E1 value18, ref S1 value19
+					ref E1 value18, ref S1 value19,
+					ref int? value20
 				)
 				{
 					//No defensive copies
@@ -53,6 +54,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					value17.ToString();
 					value18.ToString();
 					value19.ToString();
+					_ = value20.HasValue;
+					_ = value20.Value;
+					value20.GetValueOrDefault();
+					value20.GetValueOrDefault(0);
+					value20.Equals(null);
+					value20.GetHashCode();
+					value20.ToString();
 				}
 
 				public void M2
@@ -66,12 +74,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					in IntPtr value12, in UIntPtr value13,
 					in decimal value14, in DateTime value15,
 					in nint value16, in nuint value17,
-					in E1 value18, in S1 value19
+					in E1 value18, in S1 value19,
+					in int? value20
 				)
 				{
 					//Defensive copy emitted on platforms (0-17) where it's not marked as readonly, even though it's a primitive.
 					//Defensive copy also emitted on 18 always
-					//value19 is always a real defensive copy
+					//value19 is always a real defensive copy, and value20 has real defensive copies for .Equals, .GetHashCode, and .ToString
 					{|#0:value0.ToString()|};
 					{|#1:value1.ToString()|};
 					{|#2:value2.ToString()|};
@@ -92,6 +101,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					{|#17:value17.ToString()|};
 					{|#18:value18.ToString()|};
 					{|#19:value19.ToString()|};
+					_ = {|#20:value20.HasValue|};
+					_ = {|#21:value20.Value|};
+					{|#22:value20.GetValueOrDefault()|};
+					{|#23:value20.GetValueOrDefault(0)|};
+					{|#24:value20.Equals(null)|};
+					{|#25:value20.GetHashCode()|};
+					{|#26:value20.ToString()|};
 				}
 			}
 
@@ -127,13 +143,20 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			VerifyCS.Diagnostic("HAM0003").WithLocation(17).WithArguments("ToString", "value17"),
 			VerifyCS.Diagnostic("HAM0003").WithLocation(18).WithArguments("ToString", "value18"),
 			VerifyCS.Diagnostic("HAM0001").WithLocation(19).WithArguments("ToString", "value19"),
+			VerifyCS.Diagnostic("HAM0003").WithLocation(20).WithArguments("HasValue", "value20"),
+			VerifyCS.Diagnostic("HAM0003").WithLocation(21).WithArguments("Value", "value20"),
+			VerifyCS.Diagnostic("HAM0003").WithLocation(22).WithArguments("GetValueOrDefault", "value20"),
+			VerifyCS.Diagnostic("HAM0003").WithLocation(23).WithArguments("GetValueOrDefault", "value20"),
+			VerifyCS.Diagnostic("HAM0001").WithLocation(24).WithArguments("Equals", "value20"),
+			VerifyCS.Diagnostic("HAM0001").WithLocation(25).WithArguments("GetHashCode", "value20"),
+			VerifyCS.Diagnostic("HAM0001").WithLocation(26).WithArguments("ToString", "value20"),
 		];
 
 		[Fact]
 		public async Task VerifyPrimitiveDefensiveCopy()
 		{
 			await VerifyCS.VerifyAnalyzerAsync(PrimitiveDefensiveCopySourceCode,
-				PrimitiveDefensiveCopyDiagnostics[18..]);
+				[.. PrimitiveDefensiveCopyDiagnostics[18..20], .. PrimitiveDefensiveCopyDiagnostics[24..]]);
 		}
 
 		[Fact]

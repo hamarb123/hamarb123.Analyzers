@@ -6,7 +6,9 @@
 		<Nullable>enable</Nullable>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<PolySharpIncludeGeneratedTypes>
+			System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
 			System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+			System.Index;
 		</PolySharpIncludeGeneratedTypes>
 
 		<!-- Avoid ID conflicts with the package project. -->

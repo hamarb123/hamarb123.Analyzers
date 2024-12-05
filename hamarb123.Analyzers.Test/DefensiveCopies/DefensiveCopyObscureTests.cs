@@ -1179,5 +1179,122 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				expected0, expected1, expected2, expected3,
 				expected4, expected5);
 		}
+
+		[Fact]
+		public async Task VerifyReadonlyInitAccessor()
+		{
+			const string source = """
+				using System;
+
+				public struct S1
+				{
+					private S3 a;
+					private readonly S3 b;
+
+					public readonly int A
+					{
+						init => a.ToString();
+					}
+
+					public int A1
+					{
+						readonly get => 1;
+						init => a.ToString();
+					}
+
+					public readonly int A2
+					{
+						get => 1;
+						init => a.ToString();
+					}
+
+					public int A3
+					{
+						init => a.ToString();
+					}
+
+					public readonly int B
+					{
+						init => b.ToString();
+					}
+
+					public int B1
+					{
+						readonly get => 1;
+						init => b.ToString();
+					}
+
+					public readonly int B2
+					{
+						get => 1;
+						init => b.ToString();
+					}
+
+					public int B3
+					{
+						init => b.ToString();
+					}
+				}
+
+				public readonly struct S2
+				{
+					private readonly S3 b;
+
+					public readonly int B
+					{
+						init => b.ToString();
+					}
+
+					public int B1
+					{
+						readonly get => 1;
+						init => b.ToString();
+					}
+
+					public readonly int B2
+					{
+						get => 1;
+						init => b.ToString();
+					}
+
+					public int B3
+					{
+						init => b.ToString();
+					}
+				}
+
+				public struct S3
+				{
+					public override string ToString() => "";
+				}
+				""";
+
+			await VerifyCS.VerifyAnalyzerAsync(source);
+		}
+
+		[Fact]
+		public async Task VerifyContrainedCallOnReadonlyStruct()
+		{
+			//https://github.com/dotnet/roslyn/issues/76288
+
+			const string source = """
+				using System;
+
+				public struct S1
+				{
+					private S2 a;
+					public readonly string M1() => {|#0:a.ToString()|};
+				}
+
+				public readonly struct S2
+				{
+				}
+				""";
+
+			var expected0 = VerifyCS.Diagnostic("HAM0003").WithLocation(0).WithArguments("ToString", "a");
+
+			await VerifyCS.VerifyAnalyzerAsync(source,
+				expected0);
+		}
 	}
 }

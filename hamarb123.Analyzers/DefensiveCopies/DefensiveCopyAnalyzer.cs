@@ -434,7 +434,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		//additionally, we emulate when C# emits a defensive copy with generics (emit when not constrained to either class / struct, or when method is defined on interface)
 		if ((!forceIncludeReadOnlyMember && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic) return;
 		var lhsType = lhs.Type!;
-		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || (!forceIncludeReadOnlyMember && lhsType.IsReadOnly)) return;
+		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || (!forceIncludeReadOnlyMember && lhsType.IsReadOnly && !(rhsSymbol.ContainingType.SpecialType is SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Enum))) return;
 
 		//check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
@@ -490,6 +490,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			or SpecialType.System_IntPtr or SpecialType.System_UIntPtr
 			or SpecialType.System_Decimal or SpecialType.System_DateTime
 			|| lhsType.TypeKind == TypeKind.Enum
+			|| (lhsType.Is_System_Nullable_1(out _) && ((rhsSymbol.Name is "get_HasValue" or "get_Value" or "GetValueOrDefault" && rhsSymbol.Parameters.Length == 0) || (rhsSymbol.Name == "GetValueOrDefault" && rhsSymbol.OriginalDefinition.Parameters is [IParameterSymbol { RefKind: RefKind.None, CustomModifiers: [], Type: ITypeParameterSymbol { Ordinal: 0, TypeParameterKind: TypeParameterKind.Type } } ])))
 			|| (lhsType is ITypeParameterSymbol tps && tps.ConstraintTypes.Any((x) => x.SpecialType == SpecialType.System_Enum))
 		) isUnnecessary = true;
 		if (rhsSymbol.ContainingType.TypeKind == TypeKind.Interface)
