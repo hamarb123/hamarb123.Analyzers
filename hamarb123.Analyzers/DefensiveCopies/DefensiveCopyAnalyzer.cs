@@ -42,21 +42,30 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
 		//register callbacks
-		context.RegisterOperationAction(AnalyzePropertyReference, OperationKind.PropertyReference);
-		context.RegisterOperationAction(AnalyzeEventAssignment, OperationKind.EventAssignment);
-		context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
-		context.RegisterOperationAction(AnalyzeForEach, OperationKind.Loop);
-		context.RegisterOperationAction(AnalyzeBinaryOperation, OperationKind.Binary, OperationKind.CompoundAssignment);
-		context.RegisterOperationAction(AnalyzeImplicitIndexer, OperationKind.ImplicitIndexerReference);
-		context.RegisterOperationAction(AnalyzeAwait, OperationKind.Await);
-		context.RegisterSyntaxNodeAction(AnalyzeFixedStatement, SyntaxKind.FixedStatement);
+		context.RegisterCompilationStartAction(CompilationStartAction);
 	}
 
-	private static void AnalyzePropertyReference(OperationAnalysisContext context)
+	private void CompilationStartAction(CompilationStartAnalysisContext context)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
+		//get the enabled analysers
+		bool runHAM0001 = context.Options.ShouldRun("HAM0001"), runHAM0003 = context.Options.ShouldRun("HAM0003");
 
+		//if at least 1 is enabled, register them all
+		if (runHAM0001 || runHAM0003)
+		{
+			context.RegisterOperationAction((ctx) => AnalyzePropertyReference(ctx, runHAM0001, runHAM0003), OperationKind.PropertyReference);
+			context.RegisterOperationAction((ctx) => AnalyzeEventAssignment(ctx, runHAM0001, runHAM0003), OperationKind.EventAssignment);
+			context.RegisterOperationAction((ctx) => AnalyzeInvocation(ctx, runHAM0001, runHAM0003), OperationKind.Invocation);
+			context.RegisterOperationAction((ctx) => AnalyzeForEach(ctx, runHAM0001, runHAM0003), OperationKind.Loop);
+			context.RegisterOperationAction((ctx) => AnalyzeBinaryOperation(ctx, runHAM0001, runHAM0003), OperationKind.Binary, OperationKind.CompoundAssignment);
+			context.RegisterOperationAction((ctx) => AnalyzeImplicitIndexer(ctx, runHAM0001, runHAM0003), OperationKind.ImplicitIndexerReference);
+			context.RegisterOperationAction((ctx) => AnalyzeAwait(ctx, runHAM0001, runHAM0003), OperationKind.Await);
+			context.RegisterSyntaxNodeAction((ctx) => AnalyzeFixedStatement(ctx, runHAM0001, runHAM0003), SyntaxKind.FixedStatement);
+		}
+	}
+
+	private static void AnalyzePropertyReference(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
+	{
 		//run it
 		if (context.Operation is IPropertyReferenceOperation op)
 		{
@@ -82,12 +91,12 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				if (getter)
 				{
 					var rhsSymbol = propertySymbol.GetMethod;
-					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 				}
 				if (setter)
 				{
 					var rhsSymbol = propertySymbol.SetMethod;
-					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 				}
 			}
 		}
@@ -107,11 +116,8 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		};
 	}
 
-	private static void AnalyzeEventAssignment(OperationAnalysisContext context)
+	private static void AnalyzeEventAssignment(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//run it
 		if (context.Operation is IEventAssignmentOperation op && op.EventReference is IEventReferenceOperation eventRef)
 		{
@@ -122,16 +128,13 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				//get the event accessor we're invoking, then analyze
 				var eventSymbol = eventRef.Event;
 				var rhsSymbol = op.Adds ? eventSymbol?.AddMethod : eventSymbol?.RemoveMethod;
-				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, eventRef, eventSymbol!.Name, false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, eventRef, eventSymbol!.Name, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
 
-	private static void AnalyzeInvocation(OperationAnalysisContext context)
+	private static void AnalyzeInvocation(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//run it
 		if (context.Operation is IInvocationOperation op)
 		{
@@ -141,16 +144,13 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			{
 				//get the rhs method we're calling, then analyze
 				var rhsSymbol = op.TargetMethod;
-				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
 
-	private static void AnalyzeForEach(OperationAnalysisContext context)
+	private static void AnalyzeForEach(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//run it
 		if (context.Operation is IForEachLoopOperation op)
 		{
@@ -163,17 +163,14 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				if (op.Syntax is CommonForEachStatementSyntax forEachStatementSyntax)
 				{
 					var rhsSymbol = op.SemanticModel.GetForEachStatementInfo(forEachStatementSyntax).GetEnumeratorMethod;
-					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, lhs, "GetEnumerator", false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, lhs, "GetEnumerator", false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 				}
 			}
 		}
 	}
 
-	private static void AnalyzeBinaryOperation(OperationAnalysisContext context)
+	private static void AnalyzeBinaryOperation(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//get the left and right side, and exit if it's not + or +=
 		IOperation? left = null, right = null;
 		if (context.Operation is IBinaryOperation binaryOp)
@@ -206,14 +203,11 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		if (rightType == null) return;
 		var objectToString = (IMethodSymbol)context.Compilation.ObjectType.GetMembers("ToString").Single((x) => x is IMethodSymbol ms && ms.Parameters.Length == 0 && ms.ReturnType.SpecialType == SpecialType.System_String);
 		var rhsSymbol = rightType.GetOverrideFor(objectToString) ?? objectToString;
-		AnalyzeMemberAccess(right, rhsSymbol, right, null, true, context.CancellationToken, context.ReportDiagnostic, context.Options);
+		AnalyzeMemberAccess(right, rhsSymbol, right, null, true, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 	}
 
-	private static void AnalyzeImplicitIndexer(OperationAnalysisContext context)
+	private static void AnalyzeImplicitIndexer(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//run it
 		if (context.Operation is IImplicitIndexerReferenceOperation op)
 		{
@@ -262,7 +256,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 					if (rangeLeft is IConversionOperation convOp1 && convOp1.IsImplicit)
 					{
 						var m = convOp1.Conversion.MethodSymbol;
-						if (m != null && m.ContainingType.GetFullMetadataName() == "System.Index" && m.MethodKind == MethodKind.Conversion && m.Name == "op_Implicit" && m.ReturnType.GetFullMetadataName() == "System.Index" && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32)
+						if (m != null && m.ContainingType.Is_System_Index() && m.MethodKind == MethodKind.Conversion && m.Name == "op_Implicit" && m.ReturnType.Is_System_Index() && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32)
 						{
 							rangeLeft = convOp1.Operand;
 						}
@@ -270,14 +264,14 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 					if (rangeRight is IConversionOperation convOp2 && convOp2.IsImplicit)
 					{
 						var m = convOp2.Conversion.MethodSymbol;
-						if (m != null && m.ContainingType.GetFullMetadataName() == "System.Index" && m.MethodKind == MethodKind.Conversion && m.Name == "op_Implicit" && m.ReturnType.GetFullMetadataName() == "System.Index" && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32)
+						if (m != null && m.ContainingType.Is_System_Index() && m.MethodKind == MethodKind.Conversion && m.Name == "op_Implicit" && m.ReturnType.Is_System_Index() && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32)
 						{
 							rangeRight = convOp2.Operand;
 						}
 					}
 
 					//check if either left or right is an index, or agument is a range
-					if ((op.Argument is not IRangeOperation && op.Argument.Type?.GetFullMetadataName() == "System.Range") || rangeLeft?.Type?.GetFullMetadataName() == "System.Index" || rangeRight?.Type?.GetFullMetadataName() == "System.Index")
+					if ((op.Argument is not IRangeOperation && op.Argument.Type.Is_System_Range()) || (rangeLeft?.Type?.Is_System_Index() ?? false) || (rangeRight?.Type?.Is_System_Index() ?? false))
 					{
 						//get the length symbol
 						var rhsSymbol2 = op.LengthSymbol switch
@@ -298,16 +292,13 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 				//analyze if we have a method, and as long as the instance is ref readonly
 				if (rhsSymbol == null) return;
-				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, true, context.CancellationToken, context.ReportDiagnostic, context.Options);
+				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, true, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
 
-	private void AnalyzeAwait(OperationAnalysisContext context)
+	private void AnalyzeAwait(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//run it
 		if (context.Operation is IAwaitOperation op)
 		{
@@ -322,16 +313,13 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				var rhsSymbol = info.GetAwaiterMethod;
 
 				//analyze if we found the GetAwaiter method
-				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
 
-	private static void AnalyzeFixedStatement(SyntaxNodeAnalysisContext context)
+	private static void AnalyzeFixedStatement(SyntaxNodeAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0001") && !context.Options.ShouldRun("HAM0003")) return;
-
 		//run it
 		if (context.Node is FixedStatementSyntax node)
 		{
@@ -428,7 +416,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 							//skip analysis if type doesn't match properly
 							if (getPinnableReferenceSymbol == null) return;
 							if (!(elementType.SpecialType == SpecialType.System_Void || SymbolEqualityComparer.Default.Equals(getPinnableReferenceSymbol.ReturnType, elementType))) return;
-							AnalyzeMemberAccess(op, getPinnableReferenceSymbol, op, "GetPinnableReference", false, context.CancellationToken, context.ReportDiagnostic, context.Options);
+							AnalyzeMemberAccess(op, getPinnableReferenceSymbol, op, "GetPinnableReference", false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 						}
 					}
 				}
@@ -436,7 +424,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		}
 	}
 
-	private static void AnalyzeMemberAccess(IOperation lhs, IMethodSymbol rhsSymbol, IOperation diagnosticLocationOperation, string? rhsSymbolName, bool forceIncludeReadOnlyMember, CancellationToken cancellationToken, Action<Diagnostic> reportDiagnostic, AnalyzerOptions options)
+	private static void AnalyzeMemberAccess(IOperation lhs, IMethodSymbol rhsSymbol, IOperation diagnosticLocationOperation, string? rhsSymbolName, bool forceIncludeReadOnlyMember, CancellationToken cancellationToken, Action<Diagnostic> reportDiagnostic, bool runHAM0001, bool runHAM0003)
 	{
 		//check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
@@ -456,80 +444,28 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		bool isReadonlyMember = false;
 		bool isInAllowMutateThisMember = false;
 		ITypeSymbol? typeContainingAnalysisCctor = null;
-		var syntax = lhs.Syntax;
-		while (true)
+		var containingSymbol = lhs.SemanticModel?.GetEnclosingSymbol(lhs.Syntax.Span.Start, cancellationToken);
+		if (containingSymbol is IFieldSymbol fieldSymbol)
 		{
-			if (syntax is null or GlobalStatementSyntax) break;
-			if (syntax is FieldDeclarationSyntax fds)
-			{
-				var variables = fds.Declaration.Variables;
-				if (variables.Count > 0)
-				{
-					var first = variables[0];
-					if (lhs.SemanticModel.GetDeclaredSymbol(first, cancellationToken) is IFieldSymbol fieldSymbol)
-					{
-						if (fieldSymbol.IsStatic) typeContainingAnalysisCctor = fieldSymbol.ContainingType;
-					}
-				}
-				break;
-			}
-			if (syntax is AccessorDeclarationSyntax or BaseMethodDeclarationSyntax)
-			{
-				if (lhs.SemanticModel!.GetDeclaredSymbol(syntax) is IMethodSymbol methodSymbol)
-				{
-					isReadonlyMember = !methodSymbol.IsExtensionMethod && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
-					isInAllowMutateThisMember = !methodSymbol.IsExtensionMethod && !methodSymbol.IsStatic && (methodSymbol.IsInitOnly || methodSymbol.MethodKind == MethodKind.Constructor);
-					typeContainingAnalysisCctor = methodSymbol.MethodKind == MethodKind.StaticConstructor ? methodSymbol.ContainingType : null;
-				}
-				break;
-			}
-			if (syntax is BasePropertyDeclarationSyntax)
-			{
-				if (lhs.SemanticModel!.GetDeclaredSymbol(syntax) is IPropertySymbol propertySymbol)
-				{
-					var methodSymbol = propertySymbol.GetMethod!;
-					isReadonlyMember = !methodSymbol.IsExtensionMethod && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
-				}
-				break;
-			}
-
-			syntax = syntax.Parent;
+			if (fieldSymbol.IsStatic) typeContainingAnalysisCctor = fieldSymbol.ContainingType;
+		}
+		else if (containingSymbol is IMethodSymbol methodSymbol)
+		{
+			isReadonlyMember = !methodSymbol.IsExtensionMethod && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
+			isInAllowMutateThisMember = !methodSymbol.IsExtensionMethod && !methodSymbol.IsStatic && (methodSymbol.IsInitOnly || methodSymbol.MethodKind == MethodKind.Constructor);
+			typeContainingAnalysisCctor = methodSymbol.MethodKind == MethodKind.StaticConstructor ? methodSymbol.ContainingType : null;
+		}
+		else if (containingSymbol is IPropertySymbol propertySymbol)
+		{
+			methodSymbol = propertySymbol.GetMethod!;
+			isReadonlyMember = !methodSymbol.IsExtensionMethod && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
 		}
 
 		//check if it's not an applicable lhs (only warn on effective ref readonly)
 		if (!IsLHSRefReadonly(lhs, isReadonlyMember, isInAllowMutateThisMember, typeContainingAnalysisCctor, cancellationToken)) return;
 
-		//check if we've cancelled already
-		cancellationToken.ThrowIfCancellationRequested();
-
 		//check if we're in `[CompilerGenerated]`
-		syntax = lhs.Syntax;
-		while (syntax != null)
-		{
-			if (syntax is AccessorDeclarationSyntax or MemberDeclarationSyntax or AnonymousFunctionExpressionSyntax or LocalFunctionStatementSyntax or VariableDeclaratorSyntax)
-			{
-				var symbol = lhs.SemanticModel!.GetDeclaredSymbol(syntax, cancellationToken);
-				if (symbol != null && HasCompilerGeneratedAttributeOrParent(symbol)) return;
-			}
-			if (syntax is ParenthesizedLambdaExpressionSyntax parenthesizedLambdaExpressionSyntax)
-			{
-				var attributes = parenthesizedLambdaExpressionSyntax.AttributeLists;
-				foreach (var attributeList in attributes)
-				{
-					foreach (var attributeSyntax in attributeList.Attributes)
-					{
-						var attrOp = ((IAttributeOperation?)lhs.SemanticModel!.GetOperation(attributeSyntax))?.Operation;
-						if (attrOp?.Type?.ContainingNamespace?.ToDisplayString() == CompilerGeneratedAttributeType.Namespace &&
-							attrOp?.Type?.Name == CompilerGeneratedAttributeType.Name)
-						{
-							return;
-						}
-					}
-				}
-			}
-
-			syntax = syntax.Parent;
-		}
+		if (HasCompilerGeneratedAttributeOrParent(containingSymbol, cancellationToken)) return;
 
 		//check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
@@ -566,7 +502,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		cancellationToken.ThrowIfCancellationRequested();
 
 		//report the diagnostic
-		if (!options.ShouldRun(isUnnecessary ? "HAM0003" : "HAM0001")) return; //check if we're supposed to report this or not
+		if (!(isUnnecessary ? runHAM0003 : runHAM0001)) return; //check if we're supposed to report this or not
 		var node = diagnosticLocationOperation.Syntax;
 		while (node is ParenthesizedExpressionSyntax p) node = p.Expression;
 		reportDiagnostic(Diagnostic.Create(isUnnecessary ? _rule2 : _rule1, node.GetLocation(), rhsSymbolName ?? rhsSymbol.Name, GetOperationSymbolName(lhs)));
@@ -617,12 +553,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			{
 				//check that we're not in a field/property initializer (where no defensive copy is made)
 				var op = lhs;
-				while (op != null)
-				{
-					if (op.Kind == OperationKind.FieldInitializer) return false;
-					if (op.Kind == OperationKind.PropertyInitializer) return false;
-					op = op.Parent;
-				}
+				if (op?.SemanticModel?.GetEnclosingSymbol(op.Syntax.Span.Start, cancellationToken) is IFieldSymbol or IPropertySymbol) return false;
 				return IsReadonlyAccessToReadonlyFieldLike(false, null, containingType!, isInAllowMutateThisMember, typeContainingAnalysisCctor);
 			}
 			return false;
@@ -667,7 +598,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		//check for inline array access
 		if (lhs is IInlineArrayAccessOperation inlineArrayAccessOp)
 		{
-			if (inlineArrayAccessOp.Argument.Type?.GetFullMetadataName() == "System.Range") return false;
+			if (inlineArrayAccessOp.Argument.Type.Is_System_Range()) return false;
 			lhs = inlineArrayAccessOp.Instance;
 			goto again;
 		}
@@ -704,23 +635,22 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	//Code to check [CompilerGenerated]:
 
-	private static readonly Type CompilerGeneratedAttributeType = typeof(CompilerGeneratedAttribute);
-
 	private static bool HasCompilerGeneratedAttribute(ISymbol symbol)
 	{
-		return HasAttribute(symbol, CompilerGeneratedAttributeType) != null;
+		return symbol.GetAttributes().Any((x) => x.AttributeClass.Is_System_Runtime_CompilerServices_CompilerGeneratedAttribute());
 	}
 
-	private static bool HasCompilerGeneratedAttributeOrParent(ISymbol? symbol)
+	private static bool HasCompilerGeneratedAttributeOrParent(ISymbol? symbol, CancellationToken cancellationToken = default)
 	{
 		if (symbol is null) return false;
+		cancellationToken.ThrowIfCancellationRequested();
 
 		if (HasCompilerGeneratedAttribute(symbol)) return true;
 
 		if (symbol is IMethodSymbol s1)
 		{
 			var assocSymbol = s1.AssociatedSymbol;
-			return (assocSymbol != null && HasCompilerGeneratedAttribute(assocSymbol)) || HasCompilerGeneratedAttributeOrParent(s1.ContainingType);
+			return (assocSymbol != null && HasCompilerGeneratedAttribute(assocSymbol)) || HasCompilerGeneratedAttributeOrParent(s1.ContainingSymbol);
 		}
 		else if (symbol is ITypeSymbol s2)
 		{
@@ -736,7 +666,8 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		}
 		else if (symbol is IFieldSymbol s5)
 		{
-			return HasCompilerGeneratedAttributeOrParent(s5.ContainingType);
+			var assocSymbol = s5.AssociatedSymbol;
+			return (assocSymbol != null && HasCompilerGeneratedAttribute(assocSymbol)) || HasCompilerGeneratedAttributeOrParent(s5.ContainingType);
 		}
 		else if (symbol is IModuleSymbol s6)
 		{
@@ -746,12 +677,5 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		{
 			return false;
 		}
-	}
-
-	private static AttributeData? HasAttribute(ISymbol symbol, Type type)
-	{
-		return symbol.GetAttributes().FirstOrDefault(attr =>
-			attr?.AttributeClass?.ContainingNamespace?.ToDisplayString() == type.Namespace
-			&& attr.AttributeClass?.Name == type.Name);
 	}
 }

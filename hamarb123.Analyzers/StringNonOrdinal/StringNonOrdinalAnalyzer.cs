@@ -30,14 +30,14 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
 		//register callback
-		context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
+		context.RegisterCompilationStartAction((context) =>
+		{
+			if (context.Options.ShouldRun("HAM0004")) context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
+		});
 	}
 
 	private static void AnalyzeInvocation(OperationAnalysisContext context)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0004")) return;
-
 		//run it
 		if (context.Operation is IInvocationOperation op)
 		{
@@ -64,7 +64,7 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 			if (parameters.Length == 0 || parameters[0].Type.SpecialType != SpecialType.System_String) return;
 
 			//check if we don't take a StringComparison or CultureInfo parameter
-			if (!parameters.Any((x) => x.Type.GetFullMetadataName() is "System.StringComparison" or "System.Globalization.CultureInfo"))
+			if (!parameters.Any((x) => x.Type.Is_System_StringComparison() || x.Type.Is_System_Globalization_CultureInfo()))
 			{
 				//report diagnostic
 				context.ReportDiagnostic(Diagnostic.Create(_rule, op.Syntax.GetLocation(), method.Name));

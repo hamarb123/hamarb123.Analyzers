@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -36,12 +37,57 @@ namespace hamarb123.Analyzers
 			return null;
 		}
 
-		//gets the full metadata name of a type (using . for namespace separation)
-		public static string? GetFullMetadataName(this INamespaceOrTypeSymbol t)
+		public static bool Is_System_Index(this INamespaceOrTypeSymbol? t)
 		{
-			if (t is INamespaceSymbol t1 && t1.IsGlobalNamespace) return null;
-			var containing = ((INamespaceOrTypeSymbol)t.ContainingType ?? t.ContainingNamespace)?.GetFullMetadataName();
-			return containing == null ? t.MetadataName : (containing + "." + t.MetadataName);
+			return t is INamedTypeSymbol { MetadataName: "Index", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+		}
+
+		public static bool Is_System_Range(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol { MetadataName: "Range", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+		}
+
+		public static bool Is_System_StringComparison(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol { MetadataName: "StringComparison", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+		}
+
+		public static bool Is_System_Globalization_CultureInfo(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol { MetadataName: "CultureInfo", ContainingNamespace: { MetadataName: "Globalization", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } } };
+		}
+
+		public static bool Is_System_Nullable_1(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ITypeSymbol? argument)
+		{
+			argument = null;
+			if (t is INamedTypeSymbol ts)
+			{
+				var result = ts is INamedTypeSymbol { MetadataName: "Nullable`1", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+				if (result) argument = ts.TypeArguments[0];
+				return result;
+			}
+			return false;
+		}
+
+		public static bool Is_System_Runtime_CompilerServices_CompilerGeneratedAttribute(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol
+			{
+				MetadataName: "CompilerGeneratedAttribute",
+				ContainingNamespace:
+				{
+					MetadataName: "CompilerServices",
+					ContainingNamespace:
+					{
+						MetadataName: "Runtime",
+						ContainingNamespace:
+						{
+							MetadataName: "System",
+							ContainingNamespace.IsGlobalNamespace: true,
+						},
+					},
+				},
+			};
 		}
 
 		//determines if the msbuild project properties specify that we are in the include list (or true if no include list)

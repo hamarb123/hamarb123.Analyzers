@@ -42,18 +42,30 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					{
 						{|#4:value.ToString()|};
 					}
+					public static void X6<T>(in T value) where T : IDisposable, allows ref struct
+					{
+						{|#5:value.Dispose()|};
+					}
+					public static void X7<T>(in T value) where T : struct, IDisposable, allows ref struct
+					{
+						{|#6:value.Dispose()|};
+					}
+					public static void X8<T>(in T value) where T : unmanaged, IDisposable, allows ref struct
+					{
+						{|#7:value.Dispose()|};
+					}
 
 					//No defensive copies
-					public static void X6<T>(in T value) where T : class, IDisposable
+					public static void X9<T>(in T value) where T : class, IDisposable
 					{
 						value.Dispose();
 					}
-					public static void X7<T>(in T value) where T : Disposable
+					public static void X10<T>(in T value) where T : Disposable
 					{
 						value.Dispose();
 						value.X = 1;
 					}
-					public static void X8<T>(in T value) where T : class
+					public static void X11<T>(in T value) where T : class
 					{
 						value.ToString();
 					}
@@ -71,10 +83,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("Dispose", "value");
 			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("ToString", "value");
 			var expected4 = VerifyCS.Diagnostic("HAM0001").WithLocation(4).WithArguments("ToString", "value");
+			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("Dispose", "value");
+			var expected6 = VerifyCS.Diagnostic("HAM0001").WithLocation(6).WithArguments("Dispose", "value");
+			var expected7 = VerifyCS.Diagnostic("HAM0001").WithLocation(7).WithArguments("Dispose", "value");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
-				expected4);
+				expected4, expected5, expected6, expected7);
 		}
 
 		[Fact]
@@ -621,19 +636,30 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					public unsafe void M1(in S1 value)
+					public unsafe void M1(in S1 value1, in RS1 value2)
 					{
 						//No defensive copies
 						_ = nameof(S1);
-						_ = nameof(value);
-						_ = nameof(value.M1);
-						_ = nameof(value.P1);
-						_ = nameof(value.F1);
-						_ = nameof(value.E1);
-						_ = nameof(value.P2);
-						_ = nameof(value.P2.P1);
-						fixed (char* ptr = nameof(value.P2)) { }
-						foreach (var c in nameof(value.P2)) { }
+						_ = nameof(value1);
+						_ = nameof(value1.M1);
+						_ = nameof(value1.P1);
+						_ = nameof(value1.F1);
+						_ = nameof(value1.E1);
+						_ = nameof(value1.P2);
+						_ = nameof(value1.P2.P1);
+						fixed (char* ptr = nameof(value1.P2)) { }
+						foreach (var c in nameof(value1.P2)) { }
+
+						_ = nameof(RS1);
+						_ = nameof(value2);
+						_ = nameof(value2.M1);
+						_ = nameof(value2.P1);
+						_ = nameof(value2.F1);
+						_ = nameof(value2.E1);
+						_ = nameof(value2.P2);
+						_ = nameof(value2.P2.P1);
+						fixed (char* ptr = nameof(value2.P2)) { }
+						foreach (var c in nameof(value2.P2)) { }
 					}
 				}
 
@@ -646,6 +672,18 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public ref readonly S1 P2 => throw null!;
 					public ref readonly S1 GetPinnableReference() => throw null!;
 					public IEnumerator<S1> GetEnumerator() => throw null!;
+					IEnumerator IEnumerable.GetEnumerator() => throw null!;
+				}
+
+				public ref struct RS1 : IEnumerable<RS1>
+				{
+					public void M1() { }
+					public int P1 => 0;
+					public int F1;
+					public event Action E1 { add { } remove { } }
+					public ref readonly RS1 P2 => throw null!;
+					public ref readonly RS1 GetPinnableReference() => throw null!;
+					public IEnumerator<RS1> GetEnumerator() => throw null!;
 					IEnumerator IEnumerable.GetEnumerator() => throw null!;
 				}
 				""";
@@ -818,24 +856,24 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-				    public readonly S1 s1RO;
-				    public S1 s1;
-				    public readonly S2 s2RO;
-				    public S2 s2;
-				    public async Task M1RO() => {|#0:await s1RO|};
-				    public async Task M1() => await s1;
-				    public async Task M2RO() => await s2RO;
-				    public async Task M2() => await s2;
+					public readonly S1 s1RO;
+					public S1 s1;
+					public readonly S2 s2RO;
+					public S2 s2;
+					public async Task M1RO() => {|#0:await s1RO|};
+					public async Task M1() => await s1;
+					public async Task M2RO() => await s2RO;
+					public async Task M2() => await s2;
 				}
 
 				public struct S1
 				{
-				    public TaskAwaiter GetAwaiter() => default;
+					public TaskAwaiter GetAwaiter() => default;
 				}
 
 				public readonly struct S2
 				{
-				    public TaskAwaiter GetAwaiter() => default;
+					public TaskAwaiter GetAwaiter() => default;
 				}
 				""";
 
@@ -942,6 +980,16 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 							{|#1:_field4.Field.M()|};
 						}
 					}
+					public int P2
+					{
+						set
+						{
+							{|#2:_field1.M()|};
+							{|#3:_field2[0].M()|};
+							{|#4:_field3.Field.M()|};
+							{|#5:_field4.Field.M()|};
+						}
+					}
 				}
 
 				public struct S1
@@ -955,7 +1003,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_field1.M();
 						_field2[0].M();
 						_field3.Field.M();
-						{|#2:_field4.Field.M()|};
+						{|#6:_field4.Field.M()|};
 					}
 					public int P1
 					{
@@ -964,7 +1012,17 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 							_field1.M();
 							_field2[0].M();
 							_field3.Field.M();
-							{|#3:_field4.Field.M()|};
+							{|#7:_field4.Field.M()|};
+						}
+					}
+					public int P2
+					{
+						set
+						{
+							{|#8:_field1.M()|};
+							{|#9:_field2[0].M()|};
+							{|#10:_field3.Field.M()|};
+							{|#11:_field4.Field.M()|};
 						}
 					}
 				}
@@ -985,13 +1043,27 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 							_field1.M();
 							_field2[0].M();
 							_field3.Field.M();
-							{|#4:_field4.Field.M()|};
+							{|#12:_field4.Field.M()|};
+						}
+					}
+					public int P2
+					{
+						set
+						{
+							{|#13:_field1.M()|};
+							{|#14:_field2[0].M()|};
+							{|#15:_field3.Field.M()|};
+							{|#16:_field4.Field.M()|};
 						}
 					}
 					public readonly int _fieldExtra1 = _field1.M();
 					public readonly int _fieldExtra2 = _field2[0].M();
 					public readonly int _fieldExtra3 = _field3.Field.M();
-					public readonly int _fieldExtra4 = {|#5:_field4.Field.M()|};
+					public readonly int _fieldExtra4 = {|#17:_field4.Field.M()|};
+					public int PropExtra1 { get; } = _field1.M();
+					public int PropExtra2 { get; } = _field2[0].M();
+					public int PropExtra3 { get; } = _field3.Field.M();
+					public int PropExtra4 { get; } = {|#18:_field4.Field.M()|};
 				}
 
 				public struct S3
@@ -1018,14 +1090,30 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 			var expected0 = VerifyCS.Diagnostic("HAM0001").WithLocation(0).WithArguments("M", "Field");
 			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("M", "Field");
-			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("M", "Field");
-			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("M", "Field");
+			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("M", "_field1");
+			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("M", "this[]");
 			var expected4 = VerifyCS.Diagnostic("HAM0001").WithLocation(4).WithArguments("M", "Field");
 			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("M", "Field");
+			var expected6 = VerifyCS.Diagnostic("HAM0001").WithLocation(6).WithArguments("M", "Field");
+			var expected7 = VerifyCS.Diagnostic("HAM0001").WithLocation(7).WithArguments("M", "Field");
+			var expected8 = VerifyCS.Diagnostic("HAM0001").WithLocation(8).WithArguments("M", "_field1");
+			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("M", "this[]");
+			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("M", "Field");
+			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("M", "Field");
+			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("M", "Field");
+			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("M", "_field1");
+			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("M", "this[]");
+			var expected15 = VerifyCS.Diagnostic("HAM0001").WithLocation(15).WithArguments("M", "Field");
+			var expected16 = VerifyCS.Diagnostic("HAM0001").WithLocation(16).WithArguments("M", "Field");
+			var expected17 = VerifyCS.Diagnostic("HAM0001").WithLocation(17).WithArguments("M", "Field");
+			var expected18 = VerifyCS.Diagnostic("HAM0001").WithLocation(18).WithArguments("M", "Field");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
-				expected4, expected5);
+				expected4, expected5, expected6, expected7,
+				expected8, expected9, expected10, expected11,
+				expected12, expected13, expected14, expected15,
+				expected16, expected17, expected18);
 		}
 
 		[Fact]
@@ -1045,12 +1133,16 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public static int Field2 = _field2[0].M();
 					public static int Field3 = _field3.Field.M();
 					public static int Field4 = {|#0:_field4.Field.M()|};
+					public int InstanceField1 = {|#1:_field1.M()|};
+					public int InstanceField2 = {|#2:_field2[0].M()|};
+					public int InstanceField3 = {|#3:_field3.Field.M()|};
+					public int InstanceField4 = {|#4:_field4.Field.M()|};
 					static C1()
 					{
 						_field1.M();
 						_field2[0].M();
 						_field3.Field.M();
-						{|#1:_field4.Field.M()|};
+						{|#5:_field4.Field.M()|};
 					}
 				}
 
@@ -1077,10 +1169,15 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				""";
 
 			var expected0 = VerifyCS.Diagnostic("HAM0001").WithLocation(0).WithArguments("M", "Field");
-			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("M", "Field");
+			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("M", "_field1");
+			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("M", "this[]");
+			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("M", "Field");
+			var expected4 = VerifyCS.Diagnostic("HAM0001").WithLocation(4).WithArguments("M", "Field");
+			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("M", "Field");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
-				expected0, expected1);
+				expected0, expected1, expected2, expected3,
+				expected4, expected5);
 		}
 	}
 }

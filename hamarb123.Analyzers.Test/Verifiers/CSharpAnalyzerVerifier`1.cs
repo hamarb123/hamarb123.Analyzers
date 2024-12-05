@@ -26,7 +26,7 @@ namespace hamarb123.Analyzers.Test
 		/// <inheritdoc cref="AnalyzerVerifier{TAnalyzer, TTest, TVerifier}.VerifyAnalyzerAsync(string, DiagnosticResult[])"/>
 		public static async Task VerifyAnalyzerAsync(string source, Options options, params DiagnosticResult[] expected)
 		{
-			var test = new Test(options?.IsLibrary ?? true, options?.ReferenceAssemblies ?? GlobalValues.Net80)
+			var test = new Test(options?.IsLibrary ?? true, options?.ReferenceAssemblies ?? GlobalValues.Net90)
 			{
 				TestCode = source,
 			};

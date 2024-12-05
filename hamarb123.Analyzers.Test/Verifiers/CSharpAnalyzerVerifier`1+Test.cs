@@ -24,7 +24,7 @@ namespace hamarb123.Analyzers.Test
 
 					return solution;
 				});
-				ReferenceAssemblies = referenceAssemblies ?? GlobalValues.Net80;
+				ReferenceAssemblies = referenceAssemblies ?? GlobalValues.Net90;
 			}
 		}
 	}

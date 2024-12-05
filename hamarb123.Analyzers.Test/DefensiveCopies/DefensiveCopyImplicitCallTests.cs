@@ -440,13 +440,19 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					public unsafe void M1<T1, T2, T3, T4, T1B, T2B, T3B>
+					public unsafe void M1<T1, T2, T3, T4, T1B, T2B, T3B, RT1, RT2, RT1B, RT2B>
 					(
 						in S2 value2RO, ref S1 value1, ref S2 value2, ref S3 value3, in S4 value4RO, ref S4 value4, in S5 value5RO, ref S5 value5,
 						ref T1 valueT1, ref T2 valueT2, in T3 valueT3RO, ref T3 valueT3, in T4 valueT4RO, ref T4 valueT4, C1 valueC1, ref C1 refValueC1, ref readonly C1 refROValueC1,
 						ref T1B valueT1B, ref T2B valueT2B, in T3B valueT3BRO, ref T3B valueT3B,
-						in S6 value6RO, in S7 value7RO
-					) where T1 : I1 where T2 : struct, I1 where T3 : class, I1 where T4 : C1 where T1B : I2 where T2B : struct, I2 where T3B : class, I2
+						in S6 value6RO, in S7 value7RO,
+						in RS2 rsValue2RO, ref RS1 rsValue1, ref RS2 rsValue2, ref RS3 rsValue3, in RS4 rsValue4RO, ref RS4 rsValue4, in RS5 rsValue5RO, ref RS5 rsValue5,
+						ref RT1 rsValueRT1, ref RT2 rsValueRT2,
+						ref RT1B rsValueRT1B, ref RT2B rsValueRT2B,
+						in RS6 rsValue6RO, in RS7 rsValue7RO
+					)
+						where T1 : I1 where T2 : struct, I1 where T3 : class, I1 where T4 : C1 where T1B : I2 where T2B : struct, I2 where T3B : class, I2
+						where RT1 : I1, allows ref struct where RT2 : struct, I1, allows ref struct where RT1B : I2, allows ref struct where RT2B : struct, I2, allows ref struct
 					{
 						//No defensive copies
 						fixed (int* ptr = value2RO) { }
@@ -472,6 +478,21 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (int* ptr = valueT3B) { }
 						fixed (int* ptr = value6RO) { }
 						fixed (int* ptr = value7RO) { }
+
+						fixed (int* ptr = rsValue2RO) { }
+						fixed (int* ptr = rsValue1) { }
+						fixed (int* ptr = rsValue2) { }
+						fixed (int* ptr = rsValue3) { }
+						fixed (int* ptr = rsValue4RO) { }
+						fixed (int* ptr = rsValue4) { }
+						fixed (int* ptr = rsValue5RO) { }
+						fixed (int* ptr = rsValue5) { }
+						fixed (int* ptr = rsValueRT1) { }
+						fixed (int* ptr = rsValueRT2) { }
+						fixed (int* ptr = rsValueRT1B) { }
+						fixed (int* ptr = rsValueRT2B) { }
+						fixed (int* ptr = rsValue6RO) { }
+						fixed (int* ptr = rsValue7RO) { }
 
 						fixed (void* ptr = value1) { }
 						fixed (int* ptr1 = value1, ptr2 = value2) { }
@@ -501,10 +522,31 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (void* ptr = &value6RO) { }
 						fixed (void* ptr = &value7RO) { }
 
+						fixed (void* ptr = &rsValue2RO) { }
+						fixed (void* ptr = &rsValue1) { }
+						fixed (void* ptr = &rsValue2) { }
+						fixed (void* ptr = &rsValue3) { }
+						fixed (void* ptr = &rsValue4RO) { }
+						fixed (void* ptr = &rsValue4) { }
+						fixed (void* ptr = &rsValue5RO) { }
+						fixed (void* ptr = &rsValue5) { }
+						fixed (void* ptr = &rsValueRT1) { }
+						fixed (void* ptr = &rsValueRT2) { }
+						fixed (void* ptr = &rsValueRT1B) { }
+						fixed (void* ptr = &rsValueRT2B) { }
+						fixed (void* ptr = &rsValue6RO) { }
+						fixed (void* ptr = &rsValue7RO) { }
+
 						fixed (void* ptr1 = &value1, ptr2 = &value2) { }
 					}
 
-					public unsafe void M2<T1, T2, T1B, T2B>(in S2 value2RO, ref S1 value1, in S1 value1RO, in T1 valueT1RO, in T2 valueT2RO, in T1B valueT1BRO, in T2B valueT2BRO) where T1 : I1 where T2 : struct, I1 where T1B : I2 where T2B : struct, I2
+					public unsafe void M2<T1, T2, T1B, T2B, RT1, RT2, RT1B, RT2B>
+					(
+						in S2 value2RO, ref S1 value1, in S1 value1RO, in T1 valueT1RO, in T2 valueT2RO, in T1B valueT1BRO, in T2B valueT2BRO,
+						in RS2 rsValue2RO, ref RS1 rsValue1, in RS1 rsValue1RO, in RT1 rsValueRT1RO, in RT2 rsValueRT2RO, in RT1B rsValueRT1BRO, in RT2B rsValueRT2BRO
+					)
+						where T1 : I1 where T2 : struct, I1 where T1B : I2 where T2B : struct, I2
+						where RT1 : I1, allows ref struct where RT2 : struct, I1, allows ref struct where RT1B : I2, allows ref struct where RT2B : struct, I2, allows ref struct
 					{
 						//All defensive copies
 						fixed (int* ptr = {|#0:value1RO|}) { }
@@ -526,6 +568,27 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (void* ptr = &valueT2RO) { }
 						fixed (void* ptr = &valueT1BRO) { }
 						fixed (void* ptr = &valueT2BRO) { }
+
+						//All defensive copies
+						fixed (int* ptr = {|#11:rsValue1RO|}) { }
+						fixed (int* ptr = {|#12:rsValueRT1RO|}) { }
+						fixed (int* ptr = {|#13:rsValueRT2RO|}) { }
+						fixed (int* ptr = {|#14:rsValueRT1BRO|}) { }
+						fixed (int* ptr = {|#15:rsValueRT2BRO|}) { }
+
+						//Some defensive copies (first declaration always, second for first line also)
+						fixed (int* ptr1 = {|#16:rsValue1RO|}, ptr2 = {|#17:rsValueRT1RO|}) { }
+						fixed (void* ptr1 = {|#18:rsValue1RO|}) { }
+						fixed (void* ptr1 = {|#19:rsValue1RO|}, ptr2 = &rsValue1RO) { }
+						fixed (void* ptr1 = {|#20:rsValue1RO|}, ptr2 = rsValue1) { }
+						fixed (void* ptr1 = {|#21:rsValue1RO|}, ptr2 = rsValue2RO) { }
+
+						//No defensive copies (pointer)
+						fixed (void* ptr = &rsValue1RO) { }
+						fixed (void* ptr = &rsValueRT1RO) { }
+						fixed (void* ptr = &rsValueRT2RO) { }
+						fixed (void* ptr = &rsValueRT1BRO) { }
+						fixed (void* ptr = &rsValueRT2BRO) { }
 					}
 				}
 
@@ -557,7 +620,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public static unsafe void M2(in S6 value6RO)
 					{
 						//All defensive copies
-						fixed (int* ptr = {|#11:value6RO|}) { }
+						fixed (int* ptr = {|#22:value6RO|}) { }
 
 						//No defensive copies (pointer)
 						fixed (void* ptr = &value6RO) { }
@@ -569,6 +632,46 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					ref int I1.GetPinnableReference() => throw null;
 				}
 
+				public ref struct RS1
+				{
+					public ref int GetPinnableReference() => throw null;
+				}
+
+				public ref struct RS2
+				{
+					public readonly ref int GetPinnableReference() => throw null;
+				}
+
+				public ref struct RS3
+				{
+				}
+
+				public ref struct RS4
+				{
+				}
+
+				public ref struct RS5
+				{
+				}
+
+				public ref struct RS6
+				{
+					private ref int GetPinnableReference() => throw null;
+					public static unsafe void M2(in RS6 rsValue6RO)
+					{
+						//All defensive copies
+						fixed (int* ptr = {|#23:rsValue6RO|}) { }
+
+						//No defensive copies (pointer)
+						fixed (void* ptr = &rsValue6RO) { }
+					}
+				}
+
+				public ref struct RS7 : I1
+				{
+					ref int I1.GetPinnableReference() => throw null;
+				}
+
 				public static class Extensions
 				{
 					public static ref int GetPinnableReference(this ref S3 value) => throw null;
@@ -576,6 +679,11 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public static ref int GetPinnableReference(this S5 value) => throw null;
 					public static ref int GetPinnableReference(this in S6 value) => throw null;
 					public static ref int GetPinnableReference(this in S7 value) => throw null;
+					public static ref int GetPinnableReference(this ref RS3 value) => throw null;
+					public static ref int GetPinnableReference(this in RS4 value) => throw null;
+					public static ref int GetPinnableReference(this RS5 value) => throw null;
+					public static ref int GetPinnableReference(this in RS6 value) => throw null;
+					public static ref int GetPinnableReference(this in RS7 value) => throw null;
 				}
 
 				public interface I1
@@ -604,12 +712,27 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			var expected8 = VerifyCS.Diagnostic("HAM0001").WithLocation(8).WithArguments("GetPinnableReference", "value1RO");
 			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("GetPinnableReference", "value1RO");
 			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("GetPinnableReference", "value1RO");
-			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("GetPinnableReference", "value6RO");
+			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("GetPinnableReference", "rsValueRT1RO");
+			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("GetPinnableReference", "rsValueRT2RO");
+			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("GetPinnableReference", "rsValueRT1BRO");
+			var expected15 = VerifyCS.Diagnostic("HAM0001").WithLocation(15).WithArguments("GetPinnableReference", "rsValueRT2BRO");
+			var expected16 = VerifyCS.Diagnostic("HAM0001").WithLocation(16).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected17 = VerifyCS.Diagnostic("HAM0001").WithLocation(17).WithArguments("GetPinnableReference", "rsValueRT1RO");
+			var expected18 = VerifyCS.Diagnostic("HAM0001").WithLocation(18).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected19 = VerifyCS.Diagnostic("HAM0001").WithLocation(19).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected20 = VerifyCS.Diagnostic("HAM0001").WithLocation(20).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected21 = VerifyCS.Diagnostic("HAM0001").WithLocation(21).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected22 = VerifyCS.Diagnostic("HAM0001").WithLocation(22).WithArguments("GetPinnableReference", "value6RO");
+			var expected23 = VerifyCS.Diagnostic("HAM0001").WithLocation(23).WithArguments("GetPinnableReference", "rsValue6RO");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
 				expected4, expected5, expected6, expected7,
-				expected8, expected9, expected10, expected11);
+				expected8, expected9, expected10, expected11,
+				expected12, expected13, expected14, expected15,
+				expected16, expected17, expected18, expected19,
+				expected20, expected21, expected22, expected23);
 		}
 
 		[Fact]

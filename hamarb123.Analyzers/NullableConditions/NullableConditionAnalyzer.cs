@@ -25,16 +25,19 @@ public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 
 	public override void Initialize(AnalysisContext context)
 	{
+		//configure options
 		context.EnableConcurrentExecution();
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics); //todo: do we want None?
-		context.RegisterOperationAction(AnalyzeOperation, OperationKind.Conditional);
+
+		//register callback
+		context.RegisterCompilationStartAction((context) =>
+		{
+			if (context.Options.ShouldRun("HAM0002")) context.RegisterOperationAction(AnalyzeOperation, OperationKind.Conditional);
+		});
 	}
 
 	private void AnalyzeOperation(OperationAnalysisContext context)
 	{
-		//check if it should run
-		if (!context.Options.ShouldRun("HAM0002")) return;
-
 		//get the operation
 		var op = (IConditionalOperation)context.Operation;
 
@@ -44,7 +47,7 @@ public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 			{
 				//check if we have an implicit call to Nullable<bool>.GetValueOrDefault
 				if (i.IsImplicit && i.Type?.SpecialType == SpecialType.System_Boolean && !i.TargetMethod.IsStatic
-					&& i.TargetMethod.ContainingType.GetFullMetadataName() == "System.Nullable`1" && i.TargetMethod.ContainingType?.TypeArguments[0].SpecialType == SpecialType.System_Boolean
+					&& i.TargetMethod.ContainingType.Is_System_Nullable_1(out var t2) && t2.SpecialType == SpecialType.System_Boolean
 					&& i.TargetMethod.ReturnType.SpecialType == SpecialType.System_Boolean && i.TargetMethod.Parameters.Length == 0
 					)
 				{
