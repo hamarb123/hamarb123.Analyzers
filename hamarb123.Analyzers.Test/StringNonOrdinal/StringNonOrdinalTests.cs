@@ -29,18 +29,18 @@ namespace hamarb123.Analyzers.Test.StringNonOrdinal
 						str.Contains("");
 						str.EndsWith('\0');
 						{|#2:str.EndsWith("")|};
-						{|#3:str.Equals("")|};
-						{|#4:string.Equals(str, "")|};
+						str.Equals("");
+						string.Equals(str, "");
 						str.IndexOf('\0');
-						{|#5:str.IndexOf("")|};
+						{|#3:str.IndexOf("")|};
 						str.LastIndexOf('\0');
-						{|#6:str.LastIndexOf("")|};
-						{|#7:str.StartsWith("")|};
+						{|#4:str.LastIndexOf("")|};
+						{|#5:str.StartsWith("")|};
 						str.StartsWith('\0');
 						_ = str == "";
 
 						s1.EndsWith("");
-						{|#8:str.IndexOf("", 0)|};
+						{|#6:str.IndexOf("", 0)|};
 						str.EndsWith("", true, null);
 						str.EndsWith("", StringComparison.Ordinal);
 					}
@@ -55,17 +55,14 @@ namespace hamarb123.Analyzers.Test.StringNonOrdinal
 			var expected0 = VerifyCS.Diagnostic("HAM0004").WithLocation(0).WithArguments("Compare");
 			var expected1 = VerifyCS.Diagnostic("HAM0004").WithLocation(1).WithArguments("CompareTo");
 			var expected2 = VerifyCS.Diagnostic("HAM0004").WithLocation(2).WithArguments("EndsWith");
-			var expected3 = VerifyCS.Diagnostic("HAM0004").WithLocation(3).WithArguments("Equals");
-			var expected4 = VerifyCS.Diagnostic("HAM0004").WithLocation(4).WithArguments("Equals");
-			var expected5 = VerifyCS.Diagnostic("HAM0004").WithLocation(5).WithArguments("IndexOf");
-			var expected6 = VerifyCS.Diagnostic("HAM0004").WithLocation(6).WithArguments("LastIndexOf");
-			var expected7 = VerifyCS.Diagnostic("HAM0004").WithLocation(7).WithArguments("StartsWith");
-			var expected8 = VerifyCS.Diagnostic("HAM0004").WithLocation(8).WithArguments("IndexOf");
+			var expected5 = VerifyCS.Diagnostic("HAM0004").WithLocation(3).WithArguments("IndexOf");
+			var expected6 = VerifyCS.Diagnostic("HAM0004").WithLocation(4).WithArguments("LastIndexOf");
+			var expected7 = VerifyCS.Diagnostic("HAM0004").WithLocation(5).WithArguments("StartsWith");
+			var expected8 = VerifyCS.Diagnostic("HAM0004").WithLocation(6).WithArguments("IndexOf");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
-				expected4, expected5, expected6, expected7,
-				expected8);
+				expected4, expected5, expected6);
 		}
 
 		[Fact]
@@ -83,18 +80,18 @@ namespace hamarb123.Analyzers.Test.StringNonOrdinal
 						str.Contains("")
 						str.EndsWith(ChrW(0))
 						{|#2:str.EndsWith("")|}
-						{|#3:str.Equals("")|}
-						{|#4:string.Equals(str, "")|}
+						str.Equals("")
+						string.Equals(str, "")
 						str.IndexOf(ChrW(0))
-						{|#5:str.IndexOf("")|}
+						{|#3:str.IndexOf("")|}
 						str.LastIndexOf(ChrW(0))
-						{|#6:str.LastIndexOf("")|}
-						{|#7:str.StartsWith("")|}
+						{|#4:str.LastIndexOf("")|}
+						{|#5:str.StartsWith("")|}
 						str.StartsWith(ChrW(0))
 						Dim a = str = ""
 
 						s1.EndsWith("")
-						{|#8:str.IndexOf("", 0)|}
+						{|#6:str.IndexOf("", 0)|}
 						str.EndsWith("", True, Nothing)
 						str.EndsWith("", StringComparison.Ordinal)
 					End Sub
@@ -110,17 +107,14 @@ namespace hamarb123.Analyzers.Test.StringNonOrdinal
 			var expected0 = VerifyVB.Diagnostic("HAM0004").WithLocation(0).WithArguments("Compare");
 			var expected1 = VerifyVB.Diagnostic("HAM0004").WithLocation(1).WithArguments("CompareTo");
 			var expected2 = VerifyVB.Diagnostic("HAM0004").WithLocation(2).WithArguments("EndsWith");
-			var expected3 = VerifyVB.Diagnostic("HAM0004").WithLocation(3).WithArguments("Equals");
-			var expected4 = VerifyVB.Diagnostic("HAM0004").WithLocation(4).WithArguments("Equals");
-			var expected5 = VerifyVB.Diagnostic("HAM0004").WithLocation(5).WithArguments("IndexOf");
-			var expected6 = VerifyVB.Diagnostic("HAM0004").WithLocation(6).WithArguments("LastIndexOf");
-			var expected7 = VerifyVB.Diagnostic("HAM0004").WithLocation(7).WithArguments("StartsWith");
-			var expected8 = VerifyVB.Diagnostic("HAM0004").WithLocation(8).WithArguments("IndexOf");
+			var expected5 = VerifyVB.Diagnostic("HAM0004").WithLocation(3).WithArguments("IndexOf");
+			var expected6 = VerifyVB.Diagnostic("HAM0004").WithLocation(4).WithArguments("LastIndexOf");
+			var expected7 = VerifyVB.Diagnostic("HAM0004").WithLocation(5).WithArguments("StartsWith");
+			var expected8 = VerifyVB.Diagnostic("HAM0004").WithLocation(6).WithArguments("IndexOf");
 
 			await VerifyVB.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
-				expected4, expected5, expected6, expected7,
-				expected8);
+				expected4, expected5, expected6);
 		}
 	}
 }
