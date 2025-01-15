@@ -48,12 +48,11 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 			//check if it's a problematic method name
 			var problematic = (method.IsStatic, method.Name) switch
 			{
-				(false, "IndexOf") => true,
-				(false, "LastIndexOf") => true,
 				(_, "Compare") => true,
 				(false, "CompareTo") => true,
 				(false, "EndsWith") => true,
-				(_, "Equals") => true,
+				(false, "IndexOf") => true,
+				(false, "LastIndexOf") => true,
 				(false, "StartsWith") => true,
 				_ => false,
 			};
