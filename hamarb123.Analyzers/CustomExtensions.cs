@@ -39,22 +39,22 @@ namespace hamarb123.Analyzers
 
 		public static bool Is_System_Index(this INamespaceOrTypeSymbol? t)
 		{
-			return t is INamedTypeSymbol { MetadataName: "Index", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+			return t is INamedTypeSymbol { Name: "Index", Arity: 0, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
 		}
 
 		public static bool Is_System_Range(this INamespaceOrTypeSymbol? t)
 		{
-			return t is INamedTypeSymbol { MetadataName: "Range", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+			return t is INamedTypeSymbol { Name: "Range", Arity: 0, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
 		}
 
 		public static bool Is_System_StringComparison(this INamespaceOrTypeSymbol? t)
 		{
-			return t is INamedTypeSymbol { MetadataName: "StringComparison", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+			return t is INamedTypeSymbol { Name: "StringComparison", Arity: 0, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
 		}
 
 		public static bool Is_System_Globalization_CultureInfo(this INamespaceOrTypeSymbol? t)
 		{
-			return t is INamedTypeSymbol { MetadataName: "CultureInfo", ContainingNamespace: { MetadataName: "Globalization", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } } };
+			return t is INamedTypeSymbol { Name: "CultureInfo", Arity: 0, ContainingNamespace: { Name: "Globalization", ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } } };
 		}
 
 		public static bool Is_System_Nullable_1(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ITypeSymbol? argument)
@@ -62,7 +62,7 @@ namespace hamarb123.Analyzers
 			argument = null;
 			if (t is INamedTypeSymbol ts)
 			{
-				var result = ts is INamedTypeSymbol { MetadataName: "Nullable`1", ContainingNamespace: { MetadataName: "System", ContainingNamespace.IsGlobalNamespace: true } };
+				var result = ts is INamedTypeSymbol { Name: "Nullable", Arity: 1, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
 				if (result) argument = ts.TypeArguments[0];
 				return result;
 			}
@@ -73,16 +73,17 @@ namespace hamarb123.Analyzers
 		{
 			return t is INamedTypeSymbol
 			{
-				MetadataName: "CompilerGeneratedAttribute",
+				Name: "CompilerGeneratedAttribute",
+				Arity: 0,
 				ContainingNamespace:
 				{
-					MetadataName: "CompilerServices",
+					Name: "CompilerServices",
 					ContainingNamespace:
 					{
-						MetadataName: "Runtime",
+						Name: "Runtime",
 						ContainingNamespace:
 						{
-							MetadataName: "System",
+							Name: "System",
 							ContainingNamespace.IsGlobalNamespace: true,
 						},
 					},
