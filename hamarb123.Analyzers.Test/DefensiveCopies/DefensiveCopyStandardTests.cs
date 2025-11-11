@@ -1100,5 +1100,164 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				expected12, expected13, expected14, expected15,
 				expected16);
 		}
+
+		[Fact]
+		public async Task VerifyFieldKeyword()
+		{
+			const string source = """
+				using System;
+
+				public struct S1
+				{
+					public void M1() { }
+					public readonly void M2() { }
+				}
+
+				public struct S2
+				{
+					public S1 P1
+					{
+						get
+						{
+							field.M1();
+							return field;
+						}
+						set
+						{
+							field.M1();
+							value.M1();
+							field = value;
+						}
+					}
+
+					public readonly S1 P2
+					{
+						get
+						{
+							{|#0:field.M1()|};
+							field.M2();
+							return field;
+						}
+						set
+						{
+							{|#1:field.M1()|};
+							field.M2();
+							value.M1();
+						}
+					}
+
+					public S1 P3
+					{
+						readonly get
+						{
+							{|#2:field.M1()|};
+							field.M2();
+							return field;
+						}
+						set
+						{
+							field.M1();
+							value.M1();
+							field = value;
+						}
+					}
+
+					public S1 P4
+					{
+						get
+						{
+							field.M1();
+							return field;
+						}
+						readonly set
+						{
+							{|#3:field.M1()|};
+							field.M2();
+							value.M1();
+						}
+					}
+				}
+
+				public struct S3
+				{
+					public readonly S1 field;
+
+					public S1 P1
+					{
+						get
+						{
+							field.M1();
+							{|#4:this.field.M1()|};
+							this.field.M2();
+							return field;
+						}
+						set
+						{
+							field.M1();
+							{|#5:this.field.M1()|};
+							this.field.M2();
+							value.M1();
+						}
+					}
+
+					public readonly S1 P2
+					{
+						get
+						{
+							{|#6:field.M1()|};
+							field.M2();
+							{|#7:this.field.M1()|};
+							this.field.M2();
+							return field;
+						}
+						set
+						{
+							{|#8:field.M1()|};
+							field.M2();
+							{|#9:this.field.M1()|};
+							this.field.M2();
+							value.M1();
+						}
+					}
+
+					public void M1()
+					{
+						{|#10:field.M1()|};
+						field.M2();
+						{|#11:this.field.M1()|};
+						this.field.M2();
+					}
+
+					public readonly void M2()
+					{
+						{|#12:field.M1()|};
+						field.M2();
+						{|#13:this.field.M1()|};
+						this.field.M2();
+					}
+				}
+				""";
+
+			var expected0 = VerifyCS.Diagnostic("HAM0001").WithLocation(0).WithArguments("M1", "field");
+			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("M1", "field");
+			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("M1", "field");
+			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("M1", "field");
+			var expected4 = VerifyCS.Diagnostic("HAM0001").WithLocation(4).WithArguments("M1", "field");
+			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("M1", "field");
+			var expected6 = VerifyCS.Diagnostic("HAM0001").WithLocation(6).WithArguments("M1", "field");
+			var expected7 = VerifyCS.Diagnostic("HAM0001").WithLocation(7).WithArguments("M1", "field");
+			var expected8 = VerifyCS.Diagnostic("HAM0001").WithLocation(8).WithArguments("M1", "field");
+			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("M1", "field");
+			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("M1", "field");
+			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("M1", "field");
+			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("M1", "field");
+			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("M1", "field");
+
+			await VerifyCS.VerifyAnalyzerAsync(source,
+				expected0, expected1, expected2, expected3,
+				expected4, expected5, expected6, expected7,
+				expected8, expected9, expected10, expected11,
+				expected12, expected13);
+		}
 	}
 }

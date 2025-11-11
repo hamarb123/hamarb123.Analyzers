@@ -1,13 +1,13 @@
 ﻿using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp.Testing;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
+using Microsoft.CodeAnalysis.Testing;
 
 namespace hamarb123.Analyzers.Test
 {
 	public static partial class CSharpCodeRefactoringVerifier<TCodeRefactoring>
 		where TCodeRefactoring : CodeRefactoringProvider, new()
 	{
-		public class Test : CSharpCodeRefactoringTest<TCodeRefactoring, XUnitVerifier>
+		public class Test : CSharpCodeRefactoringTest<TCodeRefactoring, DefaultVerifier>
 		{
 			public Test()
 			{

@@ -12,11 +12,11 @@ namespace hamarb123.Analyzers.Test
 		//todo: use actual one when it's released in an update
 		//Microsoft.CodeAnalysis.Testing.ReferenceAssemblies.Net.Net90
 		//Or <add key="dotnet-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
-		public static readonly ReferenceAssemblies Net90 = new(
-			"net9.0",
+		public static readonly ReferenceAssemblies Net100 = new(
+			"net10.0",
 			new PackageIdentity(
 				"Microsoft.NETCore.App.Ref",
-				"9.0.0"),
-			Path.Combine("ref", "net9.0"));
+				"10.0.0"),
+			Path.Combine("ref", "net10.0"));
 	}
 }

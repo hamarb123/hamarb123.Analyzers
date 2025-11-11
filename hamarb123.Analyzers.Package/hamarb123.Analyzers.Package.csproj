@@ -7,11 +7,11 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
 		<PackageId>hamarb123.Analyzers</PackageId>
-		<Copyright>Copyright © Hamish Arblaster 2022-2024</Copyright>
+		<Copyright>Copyright © Hamish Arblaster 2022-2025</Copyright>
 		<Company>hamarb123 FunBandit29</Company>
 		<Description>Custom roslyn analyzers by hamarb123 to improve code.</Description>
 		<ProjectGuid>{F9B28023-EA29-4E26-9419-327CFAD3426F}</ProjectGuid>
-		<PackageVersion>1.2.1</PackageVersion>
+		<PackageVersion>1.2.2</PackageVersion>
 		<PackageProjectUrl>https://github.com/hamarb123/hamarb123.Analyzers</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/hamarb123/hamarb123.Analyzers</RepositoryUrl>
 		<Description>hamarb123.Analyzers</Description>

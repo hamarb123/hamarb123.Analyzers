@@ -940,7 +940,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				[InlineArray(2)]
 				public struct S3
 				{
-					private S2 field;
+					private S2 _field;
 				}
 				""";
 
@@ -1074,7 +1074,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				[InlineArray(2)]
 				public struct S4
 				{
-					private S3 field;
+					private S3 _field;
 				}
 
 				public struct S5
@@ -1154,7 +1154,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				[InlineArray(2)]
 				public struct S2
 				{
-					private S1 field;
+					private S1 _field;
 				}
 
 				public struct S3

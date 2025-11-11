@@ -32,9 +32,9 @@ For example:
 ```csharp
 class Class1
 {
-	//A defensive copy is emitted for field since we call a mutating method on readonly memory:
-	public static int GetValue() => field.Increment();
-	private static readonly Struct1 field;
+	//A defensive copy is emitted for field1 since we call a mutating method on readonly memory:
+	public static int GetValue() => field1.Increment();
+	private static readonly Struct1 field1;
 }
 
 struct Struct1

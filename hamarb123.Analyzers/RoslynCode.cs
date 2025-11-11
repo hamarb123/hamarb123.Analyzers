@@ -15,7 +15,7 @@ namespace hamarb123.Analyzers
 
 	/*
 		License from original project:
- 
+
 		The MIT License (MIT)
 
 		Copyright (c) .NET Foundation and Contributors
@@ -44,7 +44,7 @@ namespace hamarb123.Analyzers
 	//https://github.com/dotnet/roslyn/issues/25057
 
 
-	//https://github.com/dotnet/roslyn/blob/ec6c8b40e23a595b1e75aec920e3fb29e55f61cf/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/OperationExtensions.cs
+	//https://github.com/dotnet/roslyn/blob/d5cd11097e5f9e3d0f5799fb1774e93fc6b31b5b/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/OperationExtensions.cs
 
 	internal static class OperationExtensions
 	{
@@ -52,6 +52,13 @@ namespace hamarb123.Analyzers
 		/// Returns the <see cref="ValueUsageInfo"/> for the given operation.
 		/// This extension can be removed once https://github.com/dotnet/roslyn/issues/25057 is implemented.
 		/// </summary>
+		/// <remarks>
+		/// When referring to a variable, this method should only return a 'write' result if the variable is entirely
+		/// overwritten.  Not if the variable is written <em>through</em>.  For example, a write to a property on a struct
+		/// variable is not a write to the struct variable (though at runtime it might impact the value in some fashion).
+		/// <para/> Put another way, this only returns 'write' when certain that the entire value <em>is</em> absolutely
+		/// entirely overwritten.
+		/// </remarks>
 		public static ValueUsageInfo GetValueUsageInfo(this IOperation operation, ISymbol containingSymbol)
 		{
 			/*
@@ -76,21 +83,16 @@ namespace hamarb123.Analyzers
 			| ref readonly var x =     |      |       |     ✔️      |             |                 |
 
 			*/
-			if (operation is ILocalReferenceOperation localReference &&
-				localReference.IsDeclaration &&
-				!localReference.IsImplicit) // Workaround for https://github.com/dotnet/roslyn/issues/30753
+			// Workaround for https://github.com/dotnet/roslyn/issues/30753
+			if (operation is ILocalReferenceOperation { IsDeclaration: true, IsImplicit: false })
 			{
 				// Declaration expression is a definition (write) for the declared local.
 				return ValueUsageInfo.Write;
 			}
 			else if (operation is IDeclarationPatternOperation)
 			{
-				while (operation.Parent is IBinaryPatternOperation or
-					INegatedPatternOperation or
-					IRelationalPatternOperation)
-				{
+				while (operation.Parent is IBinaryPatternOperation or INegatedPatternOperation or IRelationalPatternOperation)
 					operation = operation.Parent;
-				}
 
 				switch (operation.Parent)
 				{
@@ -160,13 +162,16 @@ namespace hamarb123.Analyzers
 					? ValueUsageInfo.ReadWrite
 					: ValueUsageInfo.Write;
 			}
-			else if (operation.Parent is ISimpleAssignmentOperation simpleAssignmentOperation &&
-				simpleAssignmentOperation.Value == operation &&
-				simpleAssignmentOperation.IsRef)
+			else if (operation.Parent is ISimpleAssignmentOperation { IsRef: true } simpleAssignmentOperation &&
+				simpleAssignmentOperation.Value == operation)
 			{
 				return ValueUsageInfo.ReadableWritableReference;
 			}
-			else if (operation.Parent is IIncrementOrDecrementOperation || (operation.Parent is IForToLoopOperation forToLoopOperation && forToLoopOperation.LoopControlVariable.Equals(operation)))
+			else if (operation.Parent is IIncrementOrDecrementOperation)
+			{
+				return ValueUsageInfo.ReadWrite;
+			}
+			else if (operation.Parent is IForToLoopOperation forToLoopOperation && forToLoopOperation.LoopControlVariable.Equals(operation))
 			{
 				return ValueUsageInfo.ReadWrite;
 			}
@@ -178,9 +183,7 @@ namespace hamarb123.Analyzers
 				return parenthesizedOperation.GetValueUsageInfo(containingSymbol) &
 					~(ValueUsageInfo.Write | ValueUsageInfo.Reference);
 			}
-			else if (operation.Parent is INameOfOperation or
-					ITypeOfOperation or
-					ISizeOfOperation)
+			else if (operation.Parent is INameOfOperation or ITypeOfOperation or ISizeOfOperation)
 			{
 				return ValueUsageInfo.Name;
 			}
@@ -225,7 +228,7 @@ namespace hamarb123.Analyzers
 			else if (operation.Parent is IReDimClauseOperation reDimClauseOperation &&
 				reDimClauseOperation.Operand == operation)
 			{
-				return (reDimClauseOperation.Parent as IReDimOperation)?.Preserve == true
+				return reDimClauseOperation.Parent is IReDimOperation { Preserve: true }
 					? ValueUsageInfo.ReadWrite
 					: ValueUsageInfo.Write;
 			}

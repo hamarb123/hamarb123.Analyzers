@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Microsoft.CodeAnalysis.Testing.Verifiers;
+using Microsoft.CodeAnalysis.Testing;
 
 namespace hamarb123.Analyzers.Test
 {
@@ -9,7 +9,7 @@ namespace hamarb123.Analyzers.Test
 		where TAnalyzer : DiagnosticAnalyzer, new()
 		where TCodeFix : CodeFixProvider, new()
 	{
-		public class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, XUnitVerifier>
+		public class Test : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
 		{
 			public Test()
 			{

@@ -624,6 +624,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		if (op is IPropertyReferenceOperation propertyRefOp) return propertyRefOp.Property.IsIndexer ? "this[]" : propertyRefOp.Property.Name;
 		if (op is ILocalReferenceOperation localRefOp) return localRefOp.Local.Name;
 		if (op is IParameterReferenceOperation paramRefOp) return paramRefOp.Parameter.Name;
+		if (op is IFieldReferenceOperation { Field.IsImplicitlyDeclared: true, Field.AssociatedSymbol: IPropertySymbol { IsIndexer: false } }) return "field";
 		if (op is IFieldReferenceOperation fieldRefOp) return fieldRefOp.Field.Name;
 		if (op is ISimpleAssignmentOperation simpleAssignOp && simpleAssignOp.IsRef) return "assignment";
 		if (op is IConditionalOperation) return "conditional";
