@@ -11,6 +11,7 @@ NuGet link:
 - [Non-Ordinal String APIs Analyser](#non-ordinal-string-apis-analyser)
 - [Nullable If Analyser (VB.NET Only)](#nullable-if-analyser-vbnet-only)
 - [FixedAddressValueType Analyzer](#fixedaddressvaluetype-analyzer)
+- [GC Retrack Analyzer](#gc-retrack-analyzer)
 
 
 ## Configuration
