@@ -114,7 +114,14 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 						Consume({|#15:ref *ptr|}, (1, new object()).ToString()[0]);
 						Consume(ref *ptr, Unsafe.ReadUnaligned<int>(ref Unsafe.AsRef<byte>(ptr)));
 						Consume(ref *ptr, Unsafe.ReadUnaligned<int>(ref Unsafe.As<int, byte>(ref *(int*)ptr)));
+						S s = new();
+						Consume(ref (&s)->Field->Item1);
 					}
+				}
+
+				struct S
+				{
+					public unsafe ValueTuple<byte>* Field;
 				}
 				""";
 

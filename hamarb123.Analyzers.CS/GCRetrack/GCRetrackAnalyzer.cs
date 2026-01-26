@@ -190,6 +190,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 					operand2 = fro.Instance;
 				}
 				if (isPotentiallyToLocal && operand2 is ILocalReferenceOperation) return false;
+				return true;
 			}
 			else if (pointerOp.ConstantValue.HasValue)
 			{
