@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Operations;
 
@@ -46,7 +43,7 @@ namespace hamarb123.Analyzers
 
 	//https://github.com/dotnet/roslyn/blob/d5cd11097e5f9e3d0f5799fb1774e93fc6b31b5b/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/OperationExtensions.cs
 
-	internal static class OperationExtensions
+	public static class OperationExtensions
 	{
 		/// <summary>
 		/// Returns the <see cref="ValueUsageInfo"/> for the given operation.
@@ -338,7 +335,7 @@ namespace hamarb123.Analyzers
 	//https://github.com/dotnet/roslyn/blob/ec6c8b40e23a595b1e75aec920e3fb29e55f61cf/src/Workspaces/SharedUtilitiesAndExtensions/Compiler/Core/Extensions/ValueUsageInfo.cs
 
 	[Flags]
-	internal enum ValueUsageInfo
+	public enum ValueUsageInfo
 	{
 		/// <summary>
 		/// Represents default value indicating no usage.
@@ -395,7 +392,7 @@ namespace hamarb123.Analyzers
 		ReadableWritableReference = Read | Write | Reference
 	}
 
-	internal static class ValueUsageInfoExtensions
+	public static class ValueUsageInfoExtensions
 	{
 		public static bool IsReadFrom(this ValueUsageInfo valueUsageInfo)
 			=> (valueUsageInfo & ValueUsageInfo.Read) != 0;

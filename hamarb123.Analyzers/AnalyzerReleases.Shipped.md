@@ -1,10 +1,10 @@
-﻿## Release 1.2
+﻿## Release 1.3
 
 ### New Rules
 
 Rule ID | Category | Severity | Notes
 --------|----------|----------|--------------------
-HAM0001 | Correctness | Warning | DefensiveCopyAnalyzer
 HAM0002 | Correctness | Warning | NullableIfStatementAnalyzer
-HAM0003 | Performance | Info | DefensiveCopyAnalyzer
 HAM0004 | Correctness | Warning | StringNonOrdinalAnalyzer
+HAM0005 | Correctness | Warning | FAVTFieldTypeAnalyzer
+HAM0006 | Correctness | Info | FAVTFieldTypeAnalyzer

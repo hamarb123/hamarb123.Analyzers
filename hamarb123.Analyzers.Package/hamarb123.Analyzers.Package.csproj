@@ -7,15 +7,14 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
 		<PackageId>hamarb123.Analyzers</PackageId>
-		<Copyright>Copyright © Hamish Arblaster 2022-2025</Copyright>
+		<Copyright>Copyright © Hamish Arblaster 2022-2026</Copyright>
 		<Company>hamarb123 FunBandit29</Company>
 		<Description>Custom roslyn analyzers by hamarb123 to improve code.</Description>
 		<ProjectGuid>{F9B28023-EA29-4E26-9419-327CFAD3426F}</ProjectGuid>
-		<PackageVersion>1.2.2</PackageVersion>
+		<PackageVersion>1.3</PackageVersion>
 		<PackageProjectUrl>https://github.com/hamarb123/hamarb123.Analyzers</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/hamarb123/hamarb123.Analyzers</RepositoryUrl>
 		<Description>hamarb123.Analyzers</Description>
-		<!--<PackageReleaseNotes></PackageReleaseNotes>-->
 		<PackageTags>hamarb123.Analyzers, analyzers</PackageTags>
 		<DevelopmentDependency>true</DevelopmentDependency>
 		<NoPackageAnalysis>true</NoPackageAnalysis>
@@ -24,8 +23,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!--<ProjectReference Include="..\hamarb123.Analyzers.CodeFixes\hamarb123.Analyzers.CodeFixes.csproj" />-->
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.csproj" />
+		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -37,9 +36,8 @@
 	<Target Name="_AddAnalyzersToOutput">
 		<ItemGroup>
 			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.dll" PackagePath="analyzers/dotnet/cs" />
+			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.CS.dll" PackagePath="analyzers/dotnet/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.dll" PackagePath="analyzers/dotnet/vb" />
-			<!--<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />-->
-			<!--<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.CodeFixes.dll" PackagePath="analyzers/dotnet/vb" />-->
 		</ItemGroup>
 	</Target>
 

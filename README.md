@@ -1,8 +1,6 @@
 # hamarb123.Analyzers
 A bunch of analysers I find useful - including a defensive copies analyser.
 
-See [Shipped Analysers](hamarb123.Analyzers/AnalyzerReleases.Shipped.md) on GitHub for the list of analysers included.
-
 NuGet link:
 [![NuGet version (hamarb123.Analyzers)](https://img.shields.io/nuget/v/hamarb123.Analyzers.svg?style=flat-square)](https://www.nuget.org/packages/hamarb123.Analyzers/)
 
@@ -12,6 +10,7 @@ NuGet link:
 - [Defensive Copies Analysers (C# Only)](#defensive-copies-analysers-c-only)
 - [Non-Ordinal String APIs Analyser](#non-ordinal-string-apis-analyser)
 - [Nullable If Analyser (VB.NET Only)](#nullable-if-analyser-vbnet-only)
+- [FixedAddressValueType Analyzer](#fixedaddressvaluetype-analyzer)
 
 
 ## Configuration
@@ -96,4 +95,83 @@ Class Class1
 	End Sub
 End Class
 ```
+
+
+## FixedAddressValueType Analyzer
+
+This analyzer (`HAM0005`, `HAM0006`) analyzes incorrect and potentially incorrect uses of `[FixedAddressValueType]` on fields where it wouldn't actually have the intended effect.
+
+For example:
+```csharp
+using System;
+using System.Runtime.CompilerServices;
+
+class Class1<T>
+{
+	[FixedAddressValueType]
+	private static readonly int field1; // Diagnostic: HAM0005 - will not be pinned as intended
+
+	[FixedAddressValueType]
+	private static readonly T field1; // Diagnostic: HAM0006 - may not be pinned as intended
+
+	[FixedAddressValueType]
+	private static readonly Struct1 field1; // No diagnostic - pinned as intended
+}
+
+struct Struct1
+{
+	...
+}
+```
+
+
+## GC Retrack Analyzer
+
+This analyzer (`HAM0007`) analyzes GC retrack operations such as `ref *ptr` that may be delayed longer than textually expected so you can ensure they are tracked when intended - see [roslyn#79051](https://github.com/dotnet/roslyn/issues/79051) and [roslyn#82137](https://github.com/dotnet/roslyn/issues/82137) for more details.
+
+For example:
+```csharp
+struct MyStruct
+{
+	public unsafe int* MyData;
+	public int MyLength;
+	public GCHandle MyHandle;
+
+	public unsafe void Init(int[] myObject)
+	{
+		MyHandle = GCHandle.Alloc(myObject, GCHandleType.Pinned);
+		MyLength = myObject.Length;
+		MyData = (int*)MyHandle.AddrOfPinnedObject();
+	}
+
+	public unsafe bool Free()
+	{
+		if (MyHandle.IsAllocated)
+		{
+			MyData = null;
+			MyLength = 0;
+			MyHandle.Free();
+			return true;
+		}
+	}
+}
+
+public class Class1
+{
+	public void Accept(MyStruct myStruct, bool takeOwnership)
+	{
+		// This is meant to retrack the pointer to a byref and then free the GCHandle, but it is actually only retracked at function call time, so it gets the HAM0007 diagnostic.
+		AcceptRaw(ref *myStruct.MyData, myStruct.MyLength, takeOwnership ? myStruct.Free() : myStruct.MyHandle.IsAllocated);
+	}
+
+	public void AcceptRaw(ref int myData, int length, bool isAllocated)
+	{
+		// Do something with it
+	}
+}
+```
+
+The analyzer attempts to not warn superfluously, but there will be some false positives when doing unrecognised patterns. Additionally, doing weird things might lead to false negatives (e.g., registering a page fault handler that frees an important GCHandle).
+
+The solution to a diagnostic is to either pull out the retrack operation to a byref local variable, to pull out the side effects out of the consumption site so that the delay until function call is not an issue, or to suppress the diagnostic if it's not an issue and you do not want to change the code itself.
 

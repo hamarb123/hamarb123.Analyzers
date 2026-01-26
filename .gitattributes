@@ -1,8 +1,8 @@
 # Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
 
-# Stop all normalization for:
-*.ps1 -text
-*.bat -text
-*.cmd -text
-*.sln -text
+# Normalize to crlf for:
+*.ps1 eol=crlf
+*.bat eol=crlf
+*.cmd eol=crlf
+*.sln eol=crlf

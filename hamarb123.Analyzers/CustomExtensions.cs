@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 
@@ -69,6 +67,42 @@ namespace hamarb123.Analyzers
 			return false;
 		}
 
+		public static bool Is_System_ReadOnlySpan_1(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ITypeSymbol? argument)
+		{
+			argument = null;
+			if (t is INamedTypeSymbol ts)
+			{
+				var result = ts is INamedTypeSymbol { Name: "ReadOnlySpan", Arity: 1, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
+				if (result) argument = ts.TypeArguments[0];
+				return result;
+			}
+			return false;
+		}
+
+		public static bool Is_System_Span_1(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ITypeSymbol? argument)
+		{
+			argument = null;
+			if (t is INamedTypeSymbol ts)
+			{
+				var result = ts is INamedTypeSymbol { Name: "Span", Arity: 1, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
+				if (result) argument = ts.TypeArguments[0];
+				return result;
+			}
+			return false;
+		}
+
+		public static bool Is_System_ValueTuple(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ImmutableArray<ITypeSymbol> arguments)
+		{
+			arguments = default;
+			if (t is INamedTypeSymbol ts)
+			{
+				var result = ts is INamedTypeSymbol { Name: "ValueTuple", Arity: <= 8, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
+				if (result) arguments = ts.TypeArguments;
+				return result;
+			}
+			return false;
+		}
+
 		public static bool Is_System_Runtime_CompilerServices_CompilerGeneratedAttribute(this INamespaceOrTypeSymbol? t)
 		{
 			return t is INamedTypeSymbol
@@ -86,6 +120,158 @@ namespace hamarb123.Analyzers
 							Name: "System",
 							ContainingNamespace.IsGlobalNamespace: true,
 						},
+					},
+				},
+			};
+		}
+
+		public static bool Is_System_Runtime_CompilerServices_FixedAddressValueTypeAttribute(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol
+			{
+				Name: "FixedAddressValueTypeAttribute",
+				Arity: 0,
+				ContainingNamespace:
+				{
+					Name: "CompilerServices",
+					ContainingNamespace:
+					{
+						Name: "Runtime",
+						ContainingNamespace:
+						{
+							Name: "System",
+							ContainingNamespace.IsGlobalNamespace: true,
+						},
+					},
+				},
+			};
+		}
+
+		public static bool Is_System_MemoryExtensions(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol { Name: "MemoryExtensions", Arity: 0, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
+		}
+
+		public static bool Is_System_Collections_Generic_IEqualityComparer_1(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ITypeSymbol? argument)
+		{
+			argument = null;
+			if (t is INamedTypeSymbol ts)
+			{
+				var result = ts is INamedTypeSymbol
+				{
+					Name: "IEqualityComparer",
+					Arity: 1,
+					ContainingNamespace:
+					{
+						Name: "Generic",
+						ContainingNamespace:
+						{
+							Name: "Collections",
+							ContainingNamespace:
+							{
+								Name: "System",
+								ContainingNamespace.IsGlobalNamespace: true,
+							},
+						},
+					},
+				};
+				if (result) argument = ts.TypeArguments[0];
+				return result;
+			}
+			return false;
+		}
+
+		public static bool Is_System_Collections_Generic_IComparer_1(this INamespaceOrTypeSymbol? t, [NotNullWhen(true)] out ITypeSymbol? argument)
+		{
+			argument = null;
+			if (t is INamedTypeSymbol ts)
+			{
+				var result = ts is INamedTypeSymbol
+				{
+					Name: "IComparer",
+					Arity: 1,
+					ContainingNamespace:
+					{
+						Name: "Generic",
+						ContainingNamespace:
+						{
+							Name: "Collections",
+							ContainingNamespace:
+							{
+								Name: "System",
+								ContainingNamespace.IsGlobalNamespace: true,
+							},
+						},
+					},
+				};
+				if (result) argument = ts.TypeArguments[0];
+				return result;
+			}
+			return false;
+		}
+
+		public static bool Is_System_IFormatProvider(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol { Name: "IFormatProvider", Arity: 0, ContainingNamespace: { Name: "System", ContainingNamespace.IsGlobalNamespace: true } };
+		}
+
+		public static bool Is_System_Runtime_InteropServices_MemoryMarshal(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol
+			{
+				Name: "MemoryMarshal",
+				Arity: 0,
+				ContainingNamespace:
+				{
+					Name: "InteropServices",
+					ContainingNamespace:
+					{
+						Name: "Runtime",
+						ContainingNamespace:
+						{
+							Name: "System",
+							ContainingNamespace.IsGlobalNamespace: true,
+						},
+					},
+				},
+			};
+		}
+
+		public static bool Is_System_Runtime_CompilerServices_Unsafe(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol
+			{
+				Name: "Unsafe",
+				Arity: 0,
+				ContainingNamespace:
+				{
+					Name: "CompilerServices",
+					ContainingNamespace:
+					{
+						Name: "Runtime",
+						ContainingNamespace:
+						{
+							Name: "System",
+							ContainingNamespace.IsGlobalNamespace: true,
+						},
+					},
+				},
+			};
+		}
+
+		public static bool Is_System_Threading_Volatile(this INamespaceOrTypeSymbol? t)
+		{
+			return t is INamedTypeSymbol
+			{
+				Name: "Volatile",
+				Arity: 0,
+				ContainingNamespace:
+				{
+					Name: "Threading",
+					ContainingNamespace:
+					{
+						Name: "System",
+						ContainingNamespace.IsGlobalNamespace: true,
 					},
 				},
 			};

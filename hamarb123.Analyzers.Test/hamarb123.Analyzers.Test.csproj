@@ -4,8 +4,9 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis" Version="5.0.0-2.final" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis" Version="5.0.0" PrivateAssets="all" />
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.csproj" />
+		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.csproj" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
