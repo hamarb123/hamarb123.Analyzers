@@ -284,6 +284,8 @@ namespace hamarb123.Analyzers.Test.FAVTFieldType
 
 					[field: FixedAddressValueType]
 					public static (int, long) P6 { get; set; }
+
+					public static int P7 => 0;
 				}
 				""";
 

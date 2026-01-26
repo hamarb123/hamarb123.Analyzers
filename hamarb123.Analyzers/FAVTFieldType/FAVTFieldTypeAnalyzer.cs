@@ -71,7 +71,7 @@ public sealed class FAVTFieldTypeAnalyzer : DiagnosticAnalyzer
 		if (location is null) return;
 		if (!backingFieldCache.TryGetValue(propertySymbol, out var fieldSymbol))
 		{
-			fieldSymbol = propertySymbol.ContainingType.GetMembers().OfType<IFieldSymbol>().First((x) => SymbolEqualityComparer.Default.Equals(x.AssociatedSymbol, propertySymbol));
+			fieldSymbol = propertySymbol.ContainingType.GetMembers().OfType<IFieldSymbol>().FirstOrDefault((x) => SymbolEqualityComparer.Default.Equals(x.AssociatedSymbol, propertySymbol));
 			backingFieldCache[propertySymbol] = fieldSymbol;
 		}
 		if (fieldSymbol is null) return;
