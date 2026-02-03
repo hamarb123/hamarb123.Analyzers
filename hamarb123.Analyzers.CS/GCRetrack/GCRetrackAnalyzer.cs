@@ -52,6 +52,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		if (node is null) return;
 		if (!IsArgumentSyntaxByRef(node, context.SemanticModel)) return;
 		var byrefOperand = node.Expression;
+		while (byrefOperand is ParenthesizedExpressionSyntax pes) byrefOperand = pes.Expression;
 		if (!IsImportantGCRetrackExpression(byrefOperand, context.SemanticModel)) return;
 
 		//analyze it
@@ -65,6 +66,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		var node = context.Node as RefExpressionSyntax;
 		if (node is null) return;
 		var byrefOperand = node.Expression;
+		while (byrefOperand is ParenthesizedExpressionSyntax pes) byrefOperand = pes.Expression;
 		if (!IsImportantGCRetrackExpression(byrefOperand, context.SemanticModel)) return;
 
 		//analyze it
@@ -74,7 +76,9 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	private static bool IsArgumentSyntaxByRef(ArgumentSyntax node, SemanticModel semanticModel)
 	{
-		var argOp = semanticModel.GetOperation(node.Expression)?.Parent as IArgumentOperation;
+		var argValue = node.Expression;
+		while (argValue is ParenthesizedExpressionSyntax pes) argValue = pes.Expression;
+		var argOp = semanticModel.GetOperation(argValue)?.Parent as IArgumentOperation;
 		if (argOp?.Parameter is null) return false;
 		if (argOp.Parameter.RefKind == RefKind.None) return false;
 		return true;
@@ -151,6 +155,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 		//report the diagnostic
 		var syntax = byrefOperandOp.Syntax;
+		while (syntax.Parent is ParenthesizedExpressionSyntax) syntax = syntax.Parent;
 		if (syntax.Parent is { }) syntax = syntax.Parent;
 		if (doneReports.TryAdd(syntax, true)) context.ReportDiagnostic(Diagnostic.Create(_rule1, syntax.GetLocation()));
 	}
@@ -207,12 +212,28 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 	private static bool IsGCRetrackExpression(SyntaxNode operand, SemanticModel semanticModel, [NotNullWhen(true)] out IOperation? pointerOp)
 	{
 		pointerOp = null;
-		while (operand is ParenthesizedExpressionSyntax pes) operand = pes.Expression;
-		var kind = operand.Kind();
+		SyntaxKind kind;
+		while (true)
+		{
+			while (operand is ParenthesizedExpressionSyntax pes) operand = pes.Expression;
+			kind = operand.Kind();
+			if (kind == SyntaxKind.SimpleMemberAccessExpression && operand is MemberAccessExpressionSyntax maes)
+			{
+				var op = semanticModel.GetOperation(maes);
+				if (op is IFieldReferenceOperation)
+				{
+					operand = maes.Expression;
+					continue;
+				}
+			}
+			break;
+		}
 		if (kind == SyntaxKind.PointerIndirectionExpression)
 		{
 			if (operand is not PrefixUnaryExpressionSyntax derefExpr) return false;
-			pointerOp = semanticModel.GetOperation(derefExpr.Operand);
+			var op = derefExpr.Operand;
+			while (op is ParenthesizedExpressionSyntax pes) op = pes.Expression;
+			pointerOp = semanticModel.GetOperation(op);
 			return pointerOp?.Type is IPointerTypeSymbol { PointedAtType.SpecialType: not SpecialType.System_Void };
 		}
 		else if (kind == SyntaxKind.PointerMemberAccessExpression)
@@ -229,7 +250,9 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		else if (kind == SyntaxKind.ElementAccessExpression)
 		{
 			if (operand is not ElementAccessExpressionSyntax elementAccess) return false;
-			pointerOp = semanticModel.GetOperation(elementAccess.Expression);
+			var expr = elementAccess.Expression;
+			while (expr is ParenthesizedExpressionSyntax pes) expr = pes.Expression;
+			pointerOp = semanticModel.GetOperation(expr);
 			return pointerOp?.Type is IPointerTypeSymbol { PointedAtType.SpecialType: not SpecialType.System_Void };
 		}
 		else
