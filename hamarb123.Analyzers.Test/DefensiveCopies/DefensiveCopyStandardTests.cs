@@ -1259,5 +1259,41 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				expected8, expected9, expected10, expected11,
 				expected12, expected13);
 		}
+
+		[Fact]
+		public async Task VerifyNullableSuppression()
+		{
+			const string source = """
+				#nullable enable
+
+				using System;
+
+				public class C
+				{
+					public void M1<T1, T2>(in T1 value1, in ValueTuple<T2> value2)
+						where T2 : I1
+					{
+						var x = ({|#0:value1!.ToString()|})!;
+						var y = ({|#1:(value1!).ToString()|}!);
+						_ = ({|#2:(value2!).Item1![(long)0]|}!);
+						{|#3:(value2!).Item1!.E|} += null;
+					}
+				}
+
+				public interface I1
+				{
+					int? this[long a] { get; }
+					event Action? E;
+				}
+				""";
+
+			var expected0 = VerifyCS.Diagnostic("HAM0001").WithLocation(0).WithArguments("ToString", "value1");
+			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("ToString", "value1");
+			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("this[]", "Item1");
+			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("E", "Item1");
+
+			await VerifyCS.VerifyAnalyzerAsync(source,
+				expected0, expected1, expected2, expected3);
+		}
 	}
 }

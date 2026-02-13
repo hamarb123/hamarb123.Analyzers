@@ -344,7 +344,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				if (variable.Initializer?.Value is ExpressionSyntax value)
 				{
 					//check if it's not &, in which case there's no defensive copy
-					var op = context.SemanticModel.GetOperation(value);
+					var op = context.SemanticModel.GetOperation(value.GetOperationExpression());
 					if (op != null)
 					{
 						if (op is not IAddressOfOperation)
@@ -504,8 +504,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 		//report the diagnostic
 		if (!(isUnnecessary ? runHAM0003 : runHAM0001)) return; //check if we're supposed to report this or not
-		var node = diagnosticLocationOperation.Syntax;
-		while (node is ParenthesizedExpressionSyntax p) node = p.Expression;
+		var node = diagnosticLocationOperation.Syntax.GetOperationExpression();
 		reportDiagnostic(Diagnostic.Create(isUnnecessary ? _rule2 : _rule1, node.GetLocation(), rhsSymbolName ?? rhsSymbol.Name, GetOperationSymbolName(lhs)));
 	}
 

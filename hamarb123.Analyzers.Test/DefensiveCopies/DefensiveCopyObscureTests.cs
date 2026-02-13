@@ -854,16 +854,19 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				using System.Runtime.CompilerServices;
 				using System.Threading.Tasks;
 
-				public class C
+				public class C<T> where T : I1
 				{
 					public readonly S1 s1RO;
 					public S1 s1;
 					public readonly S2 s2RO;
 					public S2 s2;
+					public readonly T tRO;
 					public async Task M1RO() => {|#0:await s1RO|};
 					public async Task M1() => await s1;
 					public async Task M2RO() => await s2RO;
 					public async Task M2() => await s2;
+					public async Task M3RO() => {|#1:await tRO|};
+					public async Task M4RO() => {|#2:await tRO!|};
 				}
 
 				public struct S1
@@ -875,12 +878,19 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public TaskAwaiter GetAwaiter() => default;
 				}
+
+				public interface I1
+				{
+					TaskAwaiter GetAwaiter();
+				}
 				""";
 
 			var expected0 = VerifyCS.Diagnostic("HAM0001").WithLocation(0).WithArguments("GetAwaiter", "s1RO");
+			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("GetAwaiter", "tRO");
+			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("GetAwaiter", "tRO");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
-				expected0);
+				expected0, expected1, expected2);
 		}
 
 		[Fact]

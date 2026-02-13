@@ -250,11 +250,12 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					public void M1
+					public void M1<T>
 					(
 						in S4 value4, in S5 value5, in S6 value6, in S8 value8, in S9<S4> _value4, in S9<S5> _value5, in S9<S6> _value6, in S9<S8> _value8, in S9<List<object>> value9, in S10 value10,
-						in S11 value11, in S12 value12, in S14 value14
+						in S11 value11, in S12 value12, in S14 value14, ref T value15
 					)
+						where T : IEnumerable<S1>
 					{
 						//No defensive copies necessary (compiler still emits for S4 and S5 though)
 						foreach (var x in {|#0:value4|}) { }
@@ -271,12 +272,15 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						foreach (var x in value11) { }
 						foreach (var x in value12) { }
 						foreach (var x in value14) { }
+						foreach (var x in value15) { }
+						foreach (var x in value15!) { }
 					}
-					public void M2
+					public void M2<T>
 					(
 						in S1 value1, in S2 value2, in S3 value3, in S7 value7, in S9<S1> _value1, in S9<S2> _value2, in S9<S3> _value3, in S9<S7> _value7,
-						in S13 value13
+						in S13 value13, in T value15
 					)
+						where T : IEnumerable<S1>
 					{
 						//All defensive copies
 						foreach (var x in {|#4:value1|}) { }
@@ -288,6 +292,8 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						foreach (var x in {|#10:_value3.Field|}) { }
 						foreach (var x in {|#11:_value7.Field|}) { }
 						foreach (var x in {|#12:value13|}) { }
+						foreach (var x in {|#13:value15|}) { }
+						foreach (var x in {|#14:value15|}!) { }
 					}
 				}
 
@@ -385,12 +391,14 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("GetEnumerator", "Field");
 			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("GetEnumerator", "Field");
 			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("GetEnumerator", "value13");
+			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("GetEnumerator", "value15");
+			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("GetEnumerator", "value15");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
 				expected4, expected5, expected6, expected7,
 				expected8, expected9, expected10, expected11,
-				expected12);
+				expected12, expected13, expected14);
 		}
 
 		[Fact]
@@ -536,6 +544,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (void* ptr = &rsValueRT2B) { }
 						fixed (void* ptr = &rsValue6RO) { }
 						fixed (void* ptr = &rsValue7RO) { }
+						fixed (void* ptr = &(rsValue7RO)) { }
 
 						fixed (void* ptr1 = &value1, ptr2 = &value2) { }
 					}
@@ -554,13 +563,16 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (int* ptr = {|#2:valueT2RO|}) { }
 						fixed (int* ptr = {|#3:valueT1BRO|}) { }
 						fixed (int* ptr = {|#4:valueT2BRO|}) { }
+						fixed (int* ptr = ({|#5:valueT1RO|})) { }
+						fixed (int* ptr = {|#6:valueT1RO|}!) { }
+						fixed (int* ptr = ({|#7:valueT1RO|}!)) { }
 
 						//Some defensive copies (first declaration always, second for first line also)
-						fixed (int* ptr1 = {|#5:value1RO|}, ptr2 = {|#6:valueT1RO|}) { }
-						fixed (void* ptr1 = {|#7:value1RO|}) { }
-						fixed (void* ptr1 = {|#8:value1RO|}, ptr2 = &value1RO) { }
-						fixed (void* ptr1 = {|#9:value1RO|}, ptr2 = value1) { }
-						fixed (void* ptr1 = {|#10:value1RO|}, ptr2 = value2RO) { }
+						fixed (int* ptr1 = {|#8:value1RO|}, ptr2 = {|#9:valueT1RO|}) { }
+						fixed (void* ptr1 = {|#10:value1RO|}) { }
+						fixed (void* ptr1 = {|#11:value1RO|}, ptr2 = &value1RO) { }
+						fixed (void* ptr1 = {|#12:value1RO|}, ptr2 = value1) { }
+						fixed (void* ptr1 = {|#13:value1RO|}, ptr2 = value2RO) { }
 
 						//No defensive copies (pointer)
 						fixed (void* ptr = &value1RO) { }
@@ -570,18 +582,18 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (void* ptr = &valueT2BRO) { }
 
 						//All defensive copies
-						fixed (int* ptr = {|#11:rsValue1RO|}) { }
-						fixed (int* ptr = {|#12:rsValueRT1RO|}) { }
-						fixed (int* ptr = {|#13:rsValueRT2RO|}) { }
-						fixed (int* ptr = {|#14:rsValueRT1BRO|}) { }
-						fixed (int* ptr = {|#15:rsValueRT2BRO|}) { }
+						fixed (int* ptr = {|#14:rsValue1RO|}) { }
+						fixed (int* ptr = {|#15:rsValueRT1RO|}) { }
+						fixed (int* ptr = {|#16:rsValueRT2RO|}) { }
+						fixed (int* ptr = {|#17:rsValueRT1BRO|}) { }
+						fixed (int* ptr = {|#18:rsValueRT2BRO|}) { }
 
 						//Some defensive copies (first declaration always, second for first line also)
-						fixed (int* ptr1 = {|#16:rsValue1RO|}, ptr2 = {|#17:rsValueRT1RO|}) { }
-						fixed (void* ptr1 = {|#18:rsValue1RO|}) { }
-						fixed (void* ptr1 = {|#19:rsValue1RO|}, ptr2 = &rsValue1RO) { }
-						fixed (void* ptr1 = {|#20:rsValue1RO|}, ptr2 = rsValue1) { }
-						fixed (void* ptr1 = {|#21:rsValue1RO|}, ptr2 = rsValue2RO) { }
+						fixed (int* ptr1 = {|#19:rsValue1RO|}, ptr2 = {|#20:rsValueRT1RO|}) { }
+						fixed (void* ptr1 = {|#21:rsValue1RO|}) { }
+						fixed (void* ptr1 = {|#22:rsValue1RO|}, ptr2 = &rsValue1RO) { }
+						fixed (void* ptr1 = {|#23:rsValue1RO|}, ptr2 = rsValue1) { }
+						fixed (void* ptr1 = {|#24:rsValue1RO|}, ptr2 = rsValue2RO) { }
 
 						//No defensive copies (pointer)
 						fixed (void* ptr = &rsValue1RO) { }
@@ -620,7 +632,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public static unsafe void M2(in S6 value6RO)
 					{
 						//All defensive copies
-						fixed (int* ptr = {|#22:value6RO|}) { }
+						fixed (int* ptr = {|#25:value6RO|}) { }
 
 						//No defensive copies (pointer)
 						fixed (void* ptr = &value6RO) { }
@@ -660,7 +672,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public static unsafe void M2(in RS6 rsValue6RO)
 					{
 						//All defensive copies
-						fixed (int* ptr = {|#23:rsValue6RO|}) { }
+						fixed (int* ptr = {|#26:rsValue6RO|}) { }
 
 						//No defensive copies (pointer)
 						fixed (void* ptr = &rsValue6RO) { }
@@ -706,25 +718,28 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("GetPinnableReference", "valueT2RO");
 			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("GetPinnableReference", "valueT1BRO");
 			var expected4 = VerifyCS.Diagnostic("HAM0001").WithLocation(4).WithArguments("GetPinnableReference", "valueT2BRO");
-			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("GetPinnableReference", "value1RO");
+			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("GetPinnableReference", "valueT1RO");
 			var expected6 = VerifyCS.Diagnostic("HAM0001").WithLocation(6).WithArguments("GetPinnableReference", "valueT1RO");
-			var expected7 = VerifyCS.Diagnostic("HAM0001").WithLocation(7).WithArguments("GetPinnableReference", "value1RO");
+			var expected7 = VerifyCS.Diagnostic("HAM0001").WithLocation(7).WithArguments("GetPinnableReference", "valueT1RO");
 			var expected8 = VerifyCS.Diagnostic("HAM0001").WithLocation(8).WithArguments("GetPinnableReference", "value1RO");
-			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("GetPinnableReference", "value1RO");
+			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("GetPinnableReference", "valueT1RO");
 			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("GetPinnableReference", "value1RO");
-			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("GetPinnableReference", "rsValue1RO");
-			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("GetPinnableReference", "rsValueRT1RO");
-			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("GetPinnableReference", "rsValueRT2RO");
-			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("GetPinnableReference", "rsValueRT1BRO");
-			var expected15 = VerifyCS.Diagnostic("HAM0001").WithLocation(15).WithArguments("GetPinnableReference", "rsValueRT2BRO");
-			var expected16 = VerifyCS.Diagnostic("HAM0001").WithLocation(16).WithArguments("GetPinnableReference", "rsValue1RO");
-			var expected17 = VerifyCS.Diagnostic("HAM0001").WithLocation(17).WithArguments("GetPinnableReference", "rsValueRT1RO");
-			var expected18 = VerifyCS.Diagnostic("HAM0001").WithLocation(18).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("GetPinnableReference", "value1RO");
+			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("GetPinnableReference", "value1RO");
+			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("GetPinnableReference", "value1RO");
+			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected15 = VerifyCS.Diagnostic("HAM0001").WithLocation(15).WithArguments("GetPinnableReference", "rsValueRT1RO");
+			var expected16 = VerifyCS.Diagnostic("HAM0001").WithLocation(16).WithArguments("GetPinnableReference", "rsValueRT2RO");
+			var expected17 = VerifyCS.Diagnostic("HAM0001").WithLocation(17).WithArguments("GetPinnableReference", "rsValueRT1BRO");
+			var expected18 = VerifyCS.Diagnostic("HAM0001").WithLocation(18).WithArguments("GetPinnableReference", "rsValueRT2BRO");
 			var expected19 = VerifyCS.Diagnostic("HAM0001").WithLocation(19).WithArguments("GetPinnableReference", "rsValue1RO");
-			var expected20 = VerifyCS.Diagnostic("HAM0001").WithLocation(20).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected20 = VerifyCS.Diagnostic("HAM0001").WithLocation(20).WithArguments("GetPinnableReference", "rsValueRT1RO");
 			var expected21 = VerifyCS.Diagnostic("HAM0001").WithLocation(21).WithArguments("GetPinnableReference", "rsValue1RO");
-			var expected22 = VerifyCS.Diagnostic("HAM0001").WithLocation(22).WithArguments("GetPinnableReference", "value6RO");
-			var expected23 = VerifyCS.Diagnostic("HAM0001").WithLocation(23).WithArguments("GetPinnableReference", "rsValue6RO");
+			var expected22 = VerifyCS.Diagnostic("HAM0001").WithLocation(22).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected23 = VerifyCS.Diagnostic("HAM0001").WithLocation(23).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected24 = VerifyCS.Diagnostic("HAM0001").WithLocation(24).WithArguments("GetPinnableReference", "rsValue1RO");
+			var expected25 = VerifyCS.Diagnostic("HAM0001").WithLocation(25).WithArguments("GetPinnableReference", "value6RO");
+			var expected26 = VerifyCS.Diagnostic("HAM0001").WithLocation(26).WithArguments("GetPinnableReference", "rsValue6RO");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
@@ -732,7 +747,8 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				expected8, expected9, expected10, expected11,
 				expected12, expected13, expected14, expected15,
 				expected16, expected17, expected18, expected19,
-				expected20, expected21, expected22, expected23);
+				expected20, expected21, expected22, expected23,
+				expected24, expected25, expected26);
 		}
 
 		[Fact]

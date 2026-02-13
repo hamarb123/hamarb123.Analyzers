@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 
 namespace hamarb123.Analyzers.NullableConditions;
 
+#pragma warning disable RS1004 // Recommend adding language support to diagnostic analyzer
 [DiagnosticAnalyzer(LanguageNames.VisualBasic)]
+#pragma warning restore RS1004 // Recommend adding language support to diagnostic analyzer
 public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 {
 	private const string DiagnosticId = "HAM0002";

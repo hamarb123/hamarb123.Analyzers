@@ -18,8 +18,10 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 				public class C
 				{
 					public ref byte Consume(ref byte b) => ref b;
+					public ref string Consume(ref string s) => ref s;
 					public void Consume(ref byte b, int i) { }
 					public void Consume(ref byte b1, ref byte b2) { }
+					public void Consume(ref string s, int i) { }
 					public int GetInt() => 0;
 
 					public unsafe void M()
@@ -134,6 +136,26 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 						Consume({|#22:ref *(ptr)|}, GetInt());
 						Consume(ref (*ptr));
 						Consume({|#23:ref (*ptr)|}, GetInt());
+						Consume({|#24:ref *(string*)ptr|}, GetInt());
+
+				#nullable enable
+						Consume({|#25:ref *(string?*)ptr!|}, GetInt());
+						Consume({|#26:ref *((string?*)ptr!)|}, GetInt());
+						var ptrString = (string?*)ptr;
+						Consume({|#27:ref *ptrString!|}, GetInt());
+						Consume({|#28:ref *(ptrString!)|}, GetInt());
+						ValueTuple<ValueTuple<ValueTuple<string>>>* ptrVT4 = null;
+						Consume({|#29:ref ((((*ptrVT4).Item1).Item1.Item1!))|}, GetInt());
+						ref var localRefString1 = ref *(string*)ptr;
+						ref var localRefString2 = ref *(string?*)ptr!;
+						ref var localRefString3 = ref *((string?*)ptr!);
+						ref var localRefString4 = ref *ptrString!;
+						ref var localRefString5 = ref *(ptrString!);
+						localRefString1 = ref *(string*)ptr;
+						localRefString2 = ref *(string?*)ptr!;
+						localRefString3 = ref *((string?*)ptr!);
+						localRefString4 = ref *ptrString!;
+						localRefString5 = ref *(ptrString!);
 					}
 				}
 
@@ -167,6 +189,12 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 			var expected21 = VerifyCS.Diagnostic("HAM0007").WithLocation(21).WithArguments();
 			var expected22 = VerifyCS.Diagnostic("HAM0007").WithLocation(22).WithArguments();
 			var expected23 = VerifyCS.Diagnostic("HAM0007").WithLocation(23).WithArguments();
+			var expected24 = VerifyCS.Diagnostic("HAM0007").WithLocation(24).WithArguments();
+			var expected25 = VerifyCS.Diagnostic("HAM0007").WithLocation(25).WithArguments();
+			var expected26 = VerifyCS.Diagnostic("HAM0007").WithLocation(26).WithArguments();
+			var expected27 = VerifyCS.Diagnostic("HAM0007").WithLocation(27).WithArguments();
+			var expected28 = VerifyCS.Diagnostic("HAM0007").WithLocation(28).WithArguments();
+			var expected29 = VerifyCS.Diagnostic("HAM0007").WithLocation(29).WithArguments();
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
@@ -174,7 +202,9 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 				expected8, expected9, expected10, expected11,
 				expected12, expected13, expected14, expected15,
 				expected16, expected17, expected18, expected19,
-				expected20, expected21, expected22, expected23);
+				expected20, expected21, expected22, expected23,
+				expected24, expected25, expected26, expected27,
+				expected28, expected29);
 		}
 	}
 }
