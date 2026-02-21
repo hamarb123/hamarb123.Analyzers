@@ -1285,23 +1285,30 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyContrainedCallOnReadonlyStruct()
 		{
-			//https://github.com/dotnet/roslyn/issues/76288
-
 			const string source = """
 				using System;
 
 				public struct S1
 				{
 					private S2 a;
-					public readonly string M1() => {|#0:a.ToString()|};
+					private S3 b;
+					public readonly string M1() => a.ToString();
+					public readonly string M2() => {|#0:b.ToString()|};
 				}
 
 				public readonly struct S2
 				{
+					public void Test1() => ToString();
+					public void Test2() => this.ToString();
+					public void Test3() => base.ToString();
+				}
+
+				public struct S3
+				{
 				}
 				""";
 
-			var expected0 = VerifyCS.Diagnostic("HAM0003").WithLocation(0).WithArguments("ToString", "a");
+			var expected0 = VerifyCS.Diagnostic("HAM0003").WithLocation(0).WithArguments("ToString", "b");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0);

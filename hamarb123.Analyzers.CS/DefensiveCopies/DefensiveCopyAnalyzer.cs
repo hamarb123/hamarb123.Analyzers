@@ -430,11 +430,10 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		cancellationToken.ThrowIfCancellationRequested();
 
 		//check if it's not an applicable rhs (only warn on non-readonly instance struct method call)
-		//we also support checking constrained calls here (a non-struct defined method call on a struct instance)
 		//additionally, we emulate when C# emits a defensive copy with generics (emit when not constrained to either class / struct, or when method is defined on interface)
 		if ((!forceIncludeReadOnlyMember && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic) return;
 		var lhsType = lhs.Type!;
-		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || (!forceIncludeReadOnlyMember && lhsType.IsReadOnly && !(rhsSymbol.ContainingType.SpecialType is SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Enum))) return;
+		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || (!forceIncludeReadOnlyMember && lhsType.IsReadOnly)) return;
 
 		//check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
