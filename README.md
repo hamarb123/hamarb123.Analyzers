@@ -110,13 +110,13 @@ using System.Runtime.CompilerServices;
 class Class1<T>
 {
 	[FixedAddressValueType]
-	private static readonly int field1; // Diagnostic: HAM0005 - will not be pinned as intended
+	private static int field1; // Diagnostic: HAM0005 - will not be pinned as intended
 
 	[FixedAddressValueType]
-	private static readonly T field1; // Diagnostic: HAM0006 - may not be pinned as intended
+	private static T field1; // Diagnostic: HAM0006 - may not be pinned as intended
 
 	[FixedAddressValueType]
-	private static readonly Struct1 field1; // No diagnostic - pinned as intended
+	private static Struct1 field1; // No diagnostic - pinned as intended
 }
 
 struct Struct1
