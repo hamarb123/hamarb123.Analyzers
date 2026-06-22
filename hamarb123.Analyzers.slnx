@@ -1,0 +1,26 @@
+<Solution>
+  <Project Path="hamarb123.Analyzers/hamarb123.Analyzers.4.12.0.csproj" />
+  <Project Path="hamarb123.Analyzers.CS/hamarb123.Analyzers.CS.4.12.0.csproj" />
+  <Folder Name="/hamarb123.Analyzers.CS/">
+    <Project Path="hamarb123.Analyzers.CS/hamarb123.Analyzers.CS.4.3.1.csproj" />
+    <Project Path="hamarb123.Analyzers.CS/hamarb123.Analyzers.CS.4.9.2.csproj" />
+    <Project Path="hamarb123.Analyzers.CS/hamarb123.Analyzers.CS.4.8.0.csproj" />
+    <Project Path="hamarb123.Analyzers.CS/hamarb123.Analyzers.CS.4.7.0.csproj" />
+  </Folder>
+  <Folder Name="/hamarb123.Analyzers/">
+    <Project Path="hamarb123.Analyzers/hamarb123.Analyzers.4.3.1.csproj" />
+    <Project Path="hamarb123.Analyzers/hamarb123.Analyzers.4.9.2.csproj" />
+    <Project Path="hamarb123.Analyzers/hamarb123.Analyzers.4.8.0.csproj" />
+    <Project Path="hamarb123.Analyzers/hamarb123.Analyzers.4.7.0.csproj" />
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="CONTRIBUTING" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="hamarb123.Analyzers.Package/hamarb123.Analyzers.Package.csproj" />
+  <Project Path="hamarb123.Analyzers.Test/hamarb123.Analyzers.Test.csproj" />
+</Solution>

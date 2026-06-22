@@ -5,18 +5,28 @@
 		<IsPackable>false</IsPackable>
 		<Nullable>enable</Nullable>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-		<RootNamespace>hamarb123.Analyzers</RootNamespace>
+		<PolySharpIncludeGeneratedTypes>
+			System.Diagnostics.CodeAnalysis.DoesNotReturnAttribute;
+			System.Diagnostics.CodeAnalysis.NotNullIfNotNullAttribute;
+			System.Diagnostics.CodeAnalysis.NotNullWhenAttribute;
+			System.Index;
+		</PolySharpIncludeGeneratedTypes>
 
 		<!-- Avoid ID conflicts with the package project. -->
 		<PackageId>*$(MSBuildProjectFile)*</PackageId>
 
 		<!--Handling of roslyn multi-targetting.-->
 		<AssemblyName>$(MSBuildThisFileName).$(RoslynApiVersion)</AssemblyName>
+		<RootNamespace>hamarb123.Analyzers</RootNamespace>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.$(RoslynApiVersion).csproj" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynApiVersion)" PrivateAssets="all" />
+		<PackageReference Include="PolySharp" Version="1.16.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
