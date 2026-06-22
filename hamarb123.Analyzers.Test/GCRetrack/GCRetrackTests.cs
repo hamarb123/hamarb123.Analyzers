@@ -158,12 +158,19 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 						localRefString3 = ref *((string?*)ptr!);
 						localRefString4 = ref *ptrString!;
 						localRefString5 = ref *(ptrString!);
+						Consume(ref *s.Thing, GetInt());
+						Consume(ref s.Thing[0], GetInt());
+						Consume(ref *(*&s).Thing, GetInt());
+						Consume(ref *(&s)->Thing, GetInt());
+						Consume(ref *(&*&s)->Thing, GetInt());
+						Consume({|#31:ref *(*(S*)ptr).Thing|}, GetInt());
 					}
 				}
 
 				struct S
 				{
 					public unsafe ValueTuple<byte>* Field;
+					public unsafe fixed byte Thing[4];
 				}
 				""";
 
@@ -198,6 +205,7 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 			var expected28 = VerifyCS.Diagnostic("HAM0007").WithLocation(28).WithArguments();
 			var expected29 = VerifyCS.Diagnostic("HAM0007").WithLocation(29).WithArguments();
 			var expected30 = VerifyCS.Diagnostic("HAM0007").WithLocation(30).WithArguments();
+			var expected31 = VerifyCS.Diagnostic("HAM0007").WithLocation(31).WithArguments();
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
@@ -207,7 +215,7 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 				expected16, expected17, expected18, expected19,
 				expected20, expected21, expected22, expected23,
 				expected24, expected25, expected26, expected27,
-				expected28, expected29, expected30);
+				expected28, expected29, expected30, expected31);
 		}
 	}
 }

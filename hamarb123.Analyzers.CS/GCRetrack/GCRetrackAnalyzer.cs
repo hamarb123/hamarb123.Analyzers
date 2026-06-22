@@ -235,6 +235,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 			if (operand is not PrefixUnaryExpressionSyntax derefExpr) return false;
 			var op = derefExpr.Operand.GetOperationExpression();
 			pointerOp = semanticModel.GetOperation(op);
+			if (pointerOp is IFieldReferenceOperation { Field.IsFixedSizeBuffer: true, Instance: { } field }) return IsGCRetrackExpression(field.Syntax, semanticModel, out pointerOp);
 			return pointerOp?.Type is IPointerTypeSymbol { PointedAtType.SpecialType: not SpecialType.System_Void };
 		}
 		else if (kind == SyntaxKind.PointerMemberAccessExpression)
@@ -253,6 +254,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 			if (operand is not ElementAccessExpressionSyntax elementAccess) return false;
 			var expr = elementAccess.Expression.GetOperationExpression();
 			pointerOp = semanticModel.GetOperation(expr);
+			if (pointerOp is IFieldReferenceOperation { Field.IsFixedSizeBuffer: true, Instance: { } field }) return IsGCRetrackExpression(field.Syntax, semanticModel, out pointerOp);
 			return pointerOp?.Type is IPointerTypeSymbol { PointedAtType.SpecialType: not SpecialType.System_Void };
 		}
 		else
