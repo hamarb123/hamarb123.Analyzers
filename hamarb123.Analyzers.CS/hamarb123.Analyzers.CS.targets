@@ -1,0 +1,33 @@
+﻿<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>14</LangVersion>
+		<IsPackable>false</IsPackable>
+		<Nullable>enable</Nullable>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<RootNamespace>hamarb123.Analyzers</RootNamespace>
+
+		<!-- Avoid ID conflicts with the package project. -->
+		<PackageId>*$(MSBuildProjectFile)*</PackageId>
+
+		<!--Handling of roslyn multi-targetting.-->
+		<AssemblyName>$(MSBuildThisFileName).$(RoslynApiVersion)</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.$(RoslynApiVersion).csproj" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(RoslynApiVersion)" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
+		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="bin\**" />
+		<Compile Remove="obj\**" />
+		<None Remove="bin\**" />
+		<None Remove="obj\**" />
+	</ItemGroup>
+</Project>

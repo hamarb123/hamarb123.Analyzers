@@ -26,7 +26,9 @@ public sealed class FAVTFieldTypeAnalyzer : DiagnosticAnalyzer
 	private static readonly DiagnosticDescriptor _rule1 = new(DiagnosticId1, Title1, MessageFormat1, Category1, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description1);
 	private static readonly DiagnosticDescriptor _rule2 = new(DiagnosticId2, Title2, MessageFormat2, Category2, DiagnosticSeverity.Info, isEnabledByDefault: true, description: Description2);
 
-	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = [_rule1, _rule2];
+#pragma warning disable IDE0303 // Simplify collection initialization
+	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = ImmutableArray.Create(_rule1, _rule2);
+#pragma warning restore IDE0303 // Simplify collection initialization
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _rules;
 
 	public sealed override void Initialize(AnalysisContext context)

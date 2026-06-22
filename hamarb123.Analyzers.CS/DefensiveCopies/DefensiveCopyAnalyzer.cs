@@ -32,7 +32,9 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 	private static readonly DiagnosticDescriptor _rule1 = new(DiagnosticId1, Title1, MessageFormat1, Category1, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description1);
 	private static readonly DiagnosticDescriptor _rule2 = new(DiagnosticId2, Title2, MessageFormat2, Category2, DiagnosticSeverity.Info, isEnabledByDefault: true, description: Description2);
 
-	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = [_rule1, _rule2];
+#pragma warning disable IDE0303 // Simplify collection initialization
+	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = ImmutableArray.Create(_rule1, _rule2);
+#pragma warning restore IDE0303 // Simplify collection initialization
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _rules;
 
 	public sealed override void Initialize(AnalysisContext context)
@@ -214,8 +216,10 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			//get the lhs operation
 			var lhs = op.Instance;
 
+#if ROSLYN_4_7_0_OR_GREATER
 			//if we have an InlineArray, exit early
 			if (lhs.Type?.GetAttributes().Any((x) => x.AttributeClass?.SpecialType == SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute) == true) return;
+#endif
 
 			//get the rhs symbol/s
 			List<IMethodSymbol> rhsSymbols = op.IndexerSymbol switch
@@ -534,7 +538,11 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		//check for by-ref parameters specially, and then consider implicit fields caused by primary constructor to pass on their LHS readonly-ness
 		if (lhs is IParameterReferenceOperation paramRefOp)
 		{
-			if (paramRefOp.Parameter.RefKind is RefKind.In or RefKind.RefReadOnlyParameter) return true;
+			if (paramRefOp.Parameter.RefKind is RefKind.In
+#if ROSLYN_4_8_0_OR_GREATER
+				or RefKind.RefReadOnlyParameter
+#endif
+				) return true;
 			else if (paramRefOp.Parameter.RefKind == RefKind.Ref) return false;
 
 			bool isPrimaryConstructorParameterOnStruct = false;
@@ -594,6 +602,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		//check if this is passed by ref readonly
 		if (lhs is IInstanceReferenceOperation iro && iro.ReferenceKind == InstanceReferenceKind.ContainingTypeInstance) return isReadOnlyMember;
 
+#if ROSLYN_4_7_0_OR_GREATER
 		//check for inline array access
 		if (lhs is IInlineArrayAccessOperation inlineArrayAccessOp)
 		{
@@ -601,6 +610,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			lhs = inlineArrayAccessOp.Instance;
 			goto again;
 		}
+#endif
 
 		//check for implicit indexer
 		if (lhs is IImplicitIndexerReferenceOperation implicitIndexerRefOp)
@@ -627,7 +637,9 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		if (op is ISimpleAssignmentOperation simpleAssignOp && simpleAssignOp.IsRef) return "assignment";
 		if (op is IConditionalOperation) return "conditional";
 		if (op is IInstanceReferenceOperation) return "this";
+#if ROSLYN_4_7_0_OR_GREATER
 		if (op is IInlineArrayAccessOperation) return "this[]";
+#endif
 		if (op is IImplicitIndexerReferenceOperation) return "this[]";
 		return op.GetType().ToString();
 	}

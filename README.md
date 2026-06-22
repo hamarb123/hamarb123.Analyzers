@@ -64,6 +64,8 @@ Precise definition of defensive copy (`HAM0001`):
   - Not marked `readonly`, or otherwise causes a defensive copy.
   - It must be possible to safely elide the defensive copy with `Unsafe.AsRef` (ignoring issue of `ref struct`s in generics), when assuming that the memory location it's stored in is truly `readonly`.
 
+Note: the analyzer reports based on what is correct in the latest version of roslyn (that we have updated for), even if you're compiling on an earlier version.
+
 
 ## Non-Ordinal String APIs Analyser
 
@@ -175,4 +177,6 @@ public class Class1
 The analyzer attempts to not warn superfluously, but there will be some false positives when doing unrecognised patterns. Additionally, doing weird things might lead to false negatives (e.g., registering a page fault handler that frees an important GCHandle).
 
 The solution to a diagnostic is to either pull out the retrack operation to a byref local variable, to pull out the side effects out of the consumption site so that the delay until function call is not an issue, or to suppress the diagnostic if it's not an issue and you do not want to change the code itself.
+
+Note: the analyzer reports based on what is correct in the latest version of roslyn (that we have updated for), even if you're compiling on an earlier version.
 

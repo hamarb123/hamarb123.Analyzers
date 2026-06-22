@@ -17,7 +17,9 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 
 	private static readonly DiagnosticDescriptor _rule = new(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
 
-	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = [_rule];
+#pragma warning disable IDE0303 // Simplify collection initialization
+	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = ImmutableArray.Create(_rule);
+#pragma warning restore IDE0303 // Simplify collection initialization
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _rules;
 
 	public sealed override void Initialize(AnalysisContext context)

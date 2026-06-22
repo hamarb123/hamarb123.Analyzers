@@ -1,0 +1,8 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<RoslynApiVersion>4.8.0</RoslynApiVersion>
+		<DefineConstants>$(DefineConstants);ROSLYN_4_7_0_OR_GREATER;ROSLYN_4_8_0_OR_GREATER</DefineConstants>
+	</PropertyGroup>
+
+	<Import Project="hamarb123.Analyzers.CS.targets" />
+</Project>

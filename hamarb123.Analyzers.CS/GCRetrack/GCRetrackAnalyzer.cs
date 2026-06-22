@@ -22,7 +22,9 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	private static readonly DiagnosticDescriptor _rule1 = new(DiagnosticId1, Title1, MessageFormat1, Category1, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description1);
 
-	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = [_rule1];
+#pragma warning disable IDE0303 // Simplify collection initialization
+	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = ImmutableArray.Create(_rule1);
+#pragma warning restore IDE0303 // Simplify collection initialization
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => _rules;
 
 	public sealed override void Initialize(AnalysisContext context)
@@ -319,7 +321,9 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 			else if (op is ICoalesceAssignmentOperation cao) return MightNeedPriorRetrack(cao.Target, callerInfo) || MightNeedPriorRetrack(cao.Value, callerInfo);
 			else if (op is IConditionalAccessOperation cao2) return MightNeedPriorRetrack(cao2.Operation, callerInfo) || MightNeedPriorRetrack(cao2.WhenNotNull, callerInfo);
 			else if (op is ICoalesceOperation co3) return MightNeedPriorRetrack(co3.Value, callerInfo) || MightNeedPriorRetrack(co3.WhenNull, callerInfo);
+#if ROSLYN_4_9_2_OR_GREATER
 			else if (op is ICollectionExpressionOperation coe && IsTypeSideEffectFree(coe.Type) && IsMethodSideEffectFree(coe.ConstructMethod, out _)) return coe.Elements.Any((x) => MightNeedPriorRetrack(x, callerInfo));
+#endif
 			else if (op is IDefaultValueOperation) return false;
 			else if (op is IDeclarationExpressionOperation deo) op = deo.Expression;
 			else if (op is IDelegateCreationOperation dco) return false;
@@ -328,7 +332,9 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 			else if (op is IEventReferenceOperation ero) op = ero.Instance;
 			else if (op is IFieldInitializerOperation fio) op = fio.Value;
 			else if (!callerInfo.IsForIFormatProvider && op is IImplicitIndexerReferenceOperation iiro && IsSymbolSideEffectFree(iiro.LengthSymbol) && IsSymbolSideEffectFree(iiro.IndexerSymbol)) return MightNeedPriorRetrack(iiro.Instance, callerInfo) || MightNeedPriorRetrack(iiro.Argument, callerInfo);
+#if ROSLYN_4_7_0_OR_GREATER
 			else if (!callerInfo.IsForIFormatProvider && op is IInlineArrayAccessOperation iaao) return MightNeedPriorRetrack(iaao.Instance, callerInfo) || MightNeedPriorRetrack(iaao.Argument, callerInfo);
+#endif
 			else if (!callerInfo.IsForIFormatProvider && op is IInstanceReferenceOperation) return false;
 			else if (op is IInterpolatedStringAdditionOperation isao) return MightNeedPriorRetrack(isao.Left, callerInfo) || MightNeedPriorRetrack(isao.Right, callerInfo);
 			else if (op is IInterpolatedStringOperation iso && IsTypeFullySideEffectFree(iso.Type)) return iso.Parts.Any((x) => MightNeedPriorRetrack(x, callerInfo));
@@ -344,7 +350,9 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 			else if (op is INameOfOperation) return false;
 			else if (op is IPropertySubpatternOperation pso) return MightNeedPriorRetrack(pso.Member, callerInfo) || MightNeedPriorRetrack(pso.Pattern, callerInfo);
 			else if (op is IRangeOperation ro && IsMethodSideEffectFree(ro.Method, out _)) return MightNeedPriorRetrack(ro.LeftOperand, callerInfo) || MightNeedPriorRetrack(ro.RightOperand, callerInfo);
+#if ROSLYN_4_9_2_OR_GREATER
 			else if (op is ISpreadOperation so && IsMethodSideEffectFree(so.ElementConversion.MethodSymbol, out _)) op = so.Operand;
+#endif
 			else if (op is ISwitchExpressionArmOperation seao) return MightNeedPriorRetrack(seao.Pattern, callerInfo) || MightNeedPriorRetrack(seao.Guard, callerInfo) || MightNeedPriorRetrack(seao.Value, callerInfo);
 			else if (op is ISwitchExpressionOperation seo) return MightNeedPriorRetrack(seo.Value, callerInfo) || seo.Arms.Any((x) => MightNeedPriorRetrack(x, callerInfo));
 			else if (op is IThrowOperation) return false;
