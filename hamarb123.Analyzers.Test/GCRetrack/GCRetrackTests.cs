@@ -137,15 +137,17 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 						Consume(ref (*ptr));
 						Consume({|#23:ref (*ptr)|}, GetInt());
 						Consume({|#24:ref *(string*)ptr|}, GetInt());
+						((delegate* <ref byte, void>)null)(ref *ptr);
+						((delegate* <ref byte, int, void>)null)({|#25:ref *ptr|}, GetInt());
 
 				#nullable enable
-						Consume({|#25:ref *(string?*)ptr!|}, GetInt());
-						Consume({|#26:ref *((string?*)ptr!)|}, GetInt());
+						Consume({|#26:ref *(string?*)ptr!|}, GetInt());
+						Consume({|#27:ref *((string?*)ptr!)|}, GetInt());
 						var ptrString = (string?*)ptr;
-						Consume({|#27:ref *ptrString!|}, GetInt());
-						Consume({|#28:ref *(ptrString!)|}, GetInt());
+						Consume({|#28:ref *ptrString!|}, GetInt());
+						Consume({|#29:ref *(ptrString!)|}, GetInt());
 						ValueTuple<ValueTuple<ValueTuple<string>>>* ptrVT4 = null;
-						Consume({|#29:ref ((((*ptrVT4).Item1).Item1.Item1!))|}, GetInt());
+						Consume({|#30:ref ((((*ptrVT4).Item1).Item1.Item1!))|}, GetInt());
 						ref var localRefString1 = ref *(string*)ptr;
 						ref var localRefString2 = ref *(string?*)ptr!;
 						ref var localRefString3 = ref *((string?*)ptr!);
@@ -195,6 +197,7 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 			var expected27 = VerifyCS.Diagnostic("HAM0007").WithLocation(27).WithArguments();
 			var expected28 = VerifyCS.Diagnostic("HAM0007").WithLocation(28).WithArguments();
 			var expected29 = VerifyCS.Diagnostic("HAM0007").WithLocation(29).WithArguments();
+			var expected30 = VerifyCS.Diagnostic("HAM0007").WithLocation(30).WithArguments();
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
@@ -204,7 +207,7 @@ namespace hamarb123.Analyzers.Test.GCRetrack
 				expected16, expected17, expected18, expected19,
 				expected20, expected21, expected22, expected23,
 				expected24, expected25, expected26, expected27,
-				expected28, expected29);
+				expected28, expected29, expected30);
 		}
 	}
 }
