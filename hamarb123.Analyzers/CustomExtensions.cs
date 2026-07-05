@@ -301,5 +301,20 @@ namespace hamarb123.Analyzers
 			//no include-list specified
 			return true;
 		}
+
+		extension(ISymbol symbol)
+		{
+			public bool IsExtension
+			{
+				get
+				{
+#if ROSLYN_5_0_0_OR_GREATER
+					return symbol is IMethodSymbol { IsExtensionMethod: true } || symbol is INamedTypeSymbol { IsExtension: true } || symbol is { ContainingType.IsExtension: true };
+#else
+					return symbol is IMethodSymbol { IsExtensionMethod: true };
+#endif
+				}
+			}
+		}
 	}
 }

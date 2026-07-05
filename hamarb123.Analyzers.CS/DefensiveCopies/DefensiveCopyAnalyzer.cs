@@ -242,7 +242,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 				//check if we're using the Length symbol, since our current symbol might be readonly, but our length symbol might not be
 				string rhsSymbolName = "this[]";
-				if (rhsSymbol == null || rhsSymbol.IsExtensionMethod || rhsSymbol.IsReadOnly || rhsSymbol.ContainingType.IsReadOnly)
+				if (rhsSymbol == null || rhsSymbol.IsExtension || rhsSymbol.IsReadOnly || rhsSymbol.ContainingType.IsReadOnly)
 				{
 					//get lhs and rhs of the range, or the the value of the index
 					var rangeLeft = op.Argument switch
@@ -286,7 +286,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 						};
 
 						//if it's not readonly, then we want to use it instead
-						if (rhsSymbol2 != null && !(rhsSymbol2.IsExtensionMethod || rhsSymbol2.IsReadOnly || rhsSymbol2.ContainingType.IsReadOnly))
+						if (rhsSymbol2 != null && !(rhsSymbol2.IsExtension || rhsSymbol2.IsReadOnly || rhsSymbol2.ContainingType.IsReadOnly))
 						{
 							rhsSymbol = rhsSymbol2;
 							rhsSymbolName = op.LengthSymbol.Name;
@@ -435,7 +435,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 		//check if it's not an applicable rhs (only warn on non-readonly instance struct method call)
 		//additionally, we emulate when C# emits a defensive copy with generics (emit when not constrained to either class / struct, or when method is defined on interface)
-		if ((!forceIncludeReadOnlyMember && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic) return;
+		if ((!forceIncludeReadOnlyMember && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic || rhsSymbol.IsExtension) return;
 		var lhsType = lhs.Type!;
 		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || (!forceIncludeReadOnlyMember && lhsType.IsReadOnly)) return;
 
@@ -454,14 +454,14 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		}
 		else if (containingSymbol is IMethodSymbol methodSymbol)
 		{
-			isReadonlyMember = !methodSymbol.IsExtensionMethod && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
-			isInAllowMutateThisMember = !methodSymbol.IsExtensionMethod && !methodSymbol.IsStatic && (methodSymbol.IsInitOnly || methodSymbol.MethodKind == MethodKind.Constructor);
+			isReadonlyMember = !methodSymbol.IsExtension && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
+			isInAllowMutateThisMember = !methodSymbol.IsExtension && !methodSymbol.IsStatic && (methodSymbol.IsInitOnly || methodSymbol.MethodKind == MethodKind.Constructor);
 			typeContainingAnalysisCctor = methodSymbol.MethodKind == MethodKind.StaticConstructor ? methodSymbol.ContainingType : null;
 		}
 		else if (containingSymbol is IPropertySymbol propertySymbol)
 		{
 			methodSymbol = propertySymbol.GetMethod!;
-			isReadonlyMember = !methodSymbol.IsExtensionMethod && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
+			isReadonlyMember = !methodSymbol.IsExtension && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
 		}
 
 		//check if it's not an applicable lhs (only warn on effective ref readonly)

@@ -23,12 +23,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.4.12.0.csproj" />
+		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.5.0.0.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.4.9.2.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.4.8.0.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.4.7.0.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers\hamarb123.Analyzers.4.3.1.csproj" />
-		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.4.12.0.csproj" />
+		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.5.0.0.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.4.9.2.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.4.8.0.csproj" />
 		<ProjectReference Include="..\hamarb123.Analyzers.CS\hamarb123.Analyzers.CS.4.7.0.csproj" />
@@ -44,9 +44,9 @@
 
 	<Target Name="_AddAnalyzersToOutput">
 		<ItemGroup>
-			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.4.12.0.dll" PackagePath="analyzers/dotnet/roslyn4.12.0/cs" />
-			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.CS.4.12.0.dll" PackagePath="analyzers/dotnet/roslyn4.12.0/cs" />
-			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.4.12.0.dll" PackagePath="analyzers/dotnet/roslyn4.12.0/vb" />
+			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.5.0.0.dll" PackagePath="analyzers/dotnet/roslyn5.0.0/cs" />
+			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.CS.5.0.0.dll" PackagePath="analyzers/dotnet/roslyn5.0.0/cs" />
+			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.5.0.0.dll" PackagePath="analyzers/dotnet/roslyn5.0.0/vb" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.4.9.2.dll" PackagePath="analyzers/dotnet/roslyn4.9.2/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.CS.4.9.2.dll" PackagePath="analyzers/dotnet/roslyn4.9.2/cs" />
 			<TfmSpecificPackageFile Include="$(OutputPath)\hamarb123.Analyzers.4.9.2.dll" PackagePath="analyzers/dotnet/roslyn4.9.2/vb" />

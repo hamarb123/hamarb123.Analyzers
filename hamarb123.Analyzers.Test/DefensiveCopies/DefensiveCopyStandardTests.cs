@@ -1295,5 +1295,106 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3);
 		}
+
+		[Fact]
+		public async Task VerifyExtensionMethods()
+		{
+			const string source = """
+				#nullable enable
+
+				using System;
+
+				public class C
+				{
+					public void M1(S1 value1, in S1 value2, ref readonly S1 value3)
+					{
+						value1.M1();
+						value1.M2();
+						value1.M3();
+						value2.M1();
+						value2.M2();
+						value2.M3();
+						value3.M1();
+						value3.M2();
+						value3.M3();
+					}
+				}
+
+				public struct S1
+				{
+				}
+
+				public static class Extensions
+				{
+					public static void M1(this S1 value) { }
+					public static void M2(this in S1 value) { }
+					public static void M3(this ref readonly S1 value) { }
+				}
+				""";
+
+			await VerifyCS.VerifyAnalyzerAsync(source);
+		}
+
+		[Fact]
+		public async Task VerifyExtensions()
+		{
+			const string source = """
+				using System;
+
+				public class C
+				{
+					public void M1(Struct1 value1, in Struct1 value2, ref readonly Struct1 value3)
+					{
+						value1.M1();
+						value1.M2();
+						value1.M3();
+						_ = value1.G1;
+						_ = value1.G2;
+						_ = value1.G3;
+						value1.S1 = 0;
+						value1.S2 = 0;
+						value1.S3 = 0;
+
+						value2.M1();
+						value2.M2();
+						value2.M3();
+
+						value3.M1();
+						value3.M2();
+						value3.M3();
+					}
+				}
+
+				public struct Struct1
+				{
+				}
+
+				public static class Extensions
+				{
+					extension(Struct1 x)
+					{
+						public void M1() { }
+						public int G1 => 0;
+						public int S1 { set { } }
+					}
+
+					extension(in Struct1 x)
+					{
+						public void M2() { }
+						public int G2 => 0;
+						public int S2 { set { } }
+					}
+
+					extension(ref readonly Struct1 x)
+					{
+						public void M3() { }
+						public int G3 => 0;
+						public int S3 { set { } }
+					}
+				}
+				""";
+
+			await VerifyCS.VerifyAnalyzerAsync(source);
+		}
 	}
 }
