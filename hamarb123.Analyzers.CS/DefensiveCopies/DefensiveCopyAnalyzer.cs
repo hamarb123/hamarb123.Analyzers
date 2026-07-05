@@ -353,74 +353,27 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 					{
 						if (op is not IAddressOfOperation)
 						{
-							//see if we can find the method
-							var type = op.Type;
-							if (type == null || type.IsReferenceType) return;
-							var containingSymbol = context.ContainingSymbol?.ContainingType;
-							if (containingSymbol == null) return;
-							IMethodSymbol? getPinnableReferenceSymbol = null;
+							//create the syntax as if we had written (op).GetPinnableReference() instead, so that we can find what method it binds to:
+							var getPinnableReferenceInvocation =
+								SyntaxFactory.InvocationExpression
+								(
+									SyntaxFactory.MemberAccessExpression
+									(
+										SyntaxKind.SimpleMemberAccessExpression,
+										SyntaxFactory.ParenthesizedExpression
+										(
+											value.GetOperationExpression()
+										),
+										SyntaxFactory.IdentifierName("GetPinnableReference")
+									)
+								);
 
-							//check for members directly on type
-							foreach (var member in type.GetMembers("GetPinnableReference"))
-							{
-								if (member is IMethodSymbol ms && !ms.IsStatic && ms.Parameters.Length == 0 && ms.RefKind != RefKind.None && context.Compilation.IsSymbolAccessibleWithin(ms, containingSymbol))
-								{
-									getPinnableReferenceSymbol = ms;
-									break;
-								}
-							}
+							//get the speculative info that will tell us what GetPinnableReference method we're calling
+							var info = context.SemanticModel.GetSpeculativeSymbolInfo(value.GetOperationExpression().SpanStart, getPinnableReferenceInvocation, SpeculativeBindingOption.BindAsExpression);
 
-							//check for members on type constraints
-							if (getPinnableReferenceSymbol == null && type is ITypeParameterSymbol tps)
-							{
-								foreach (var type2 in tps.ConstraintTypes)
-								{
-									//check directly on constraint type
-									IMethodSymbol? localSymbol = null;
-									foreach (var member in type2.GetMembers("GetPinnableReference"))
-									{
-										if (member is IMethodSymbol ms && !ms.IsStatic && ms.Parameters.Length == 0 && ms.RefKind != RefKind.None && context.Compilation.IsSymbolAccessibleWithin(ms, containingSymbol))
-										{
-											localSymbol = ms;
-											goto leave;
-										}
-									}
-
-									//check via interface inheritance
-									if (type2.TypeKind != TypeKind.Interface) goto leave;
-									foreach (var interfaceType in type2.AllInterfaces)
-									{
-										foreach (var member in interfaceType.GetMembers("GetPinnableReference"))
-										{
-											if (member is IMethodSymbol ms && !ms.IsStatic && ms.Parameters.Length == 0 && ms.RefKind != RefKind.None && context.Compilation.IsSymbolAccessibleWithin(ms, containingSymbol))
-											{
-												localSymbol = ms;
-												goto leave;
-											}
-										}
-									}
-
-									//store our symbol - if we have already found one, it's ambiguous, so set to null and break so we exit later
-									leave:
-									if (localSymbol != null)
-									{
-										//check ambiguous
-										if (getPinnableReferenceSymbol != null)
-										{
-											getPinnableReferenceSymbol = null;
-											break;
-										}
-
-										getPinnableReferenceSymbol = localSymbol;
-									}
-								}
-							}
-
-							//analyze if we found an instance (not interface, unless through constraint) GetPinnableReference, extension ones must always be passed correctly
-							//skip analysis if type doesn't match properly
-							if (getPinnableReferenceSymbol == null) return;
-							if (!(elementType.SpecialType == SpecialType.System_Void || SymbolEqualityComparer.Default.Equals(getPinnableReferenceSymbol.ReturnType, elementType))) return;
-							AnalyzeMemberAccess(op, getPinnableReferenceSymbol, op, "GetPinnableReference", false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+							//analyze if we found a (non-ambiguous) GetPinnableReference method
+							if (info.Symbol is not IMethodSymbol ms) return;
+							AnalyzeMemberAccess(op, ms, op, "GetPinnableReference", false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 						}
 					}
 				}
