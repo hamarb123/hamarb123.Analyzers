@@ -41,7 +41,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						result = "" + 0 + {|#6:value5.Value|};
 						result += {|#7:value5.Value|};
 
-						// Readonly struct doesn't emit defensive copy
+						//Readonly struct doesn't emit defensive copy
 
 						result = "" + value7;
 						result += value7;
