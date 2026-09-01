@@ -22,7 +22,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					public void M1(in S1 value1, in S3 value2, in S4 value3, in S5<S1> value4, in S5<S3> value5, in S5<S4> value6)
+					public void M1(in S1 value1, in S3 value2, in S4 value3, in S5<S1> value4, in S5<S3> value5, in S5<S4> value6, in S6 value7, in S7 value8, in S8 value9)
 					{
 						//No defensive copies necessary (all operations are readonly)
 						string result;
@@ -40,6 +40,17 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 						result = "" + 0 + {|#6:value5.Value|};
 						result += {|#7:value5.Value|};
+
+						// Readonly struct doesn't emit defensive copy
+
+						result = "" + value7;
+						result += value7;
+
+						result = "" + value8;
+						result += value8;
+
+						result = "" + value9;
+						result += value9;
 					}
 
 					public void M2(in S2 value1, in S5<S2> value2)
@@ -104,6 +115,20 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				public struct S5<T>
 				{
 					public T Value;
+				}
+
+				public readonly struct S6
+				{
+					public override string ToString() => "";
+				}
+
+				public readonly struct S7
+				{
+					public readonly override string ToString() => "";
+				}
+
+				public readonly struct S8
+				{
 				}
 				""";
 

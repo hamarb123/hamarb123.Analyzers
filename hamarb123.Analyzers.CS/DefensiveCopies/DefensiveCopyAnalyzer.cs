@@ -93,12 +93,12 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				if (getter)
 				{
 					var rhsSymbol = propertySymbol.GetMethod;
-					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 				}
 				if (setter)
 				{
 					var rhsSymbol = propertySymbol.SetMethod;
-					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, propertySymbol.IsIndexer ? "this[]" : propertySymbol.Name, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 				}
 			}
 		}
@@ -130,7 +130,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				//get the event accessor we're invoking, then analyze
 				var eventSymbol = eventRef.Event;
 				var rhsSymbol = op.Adds ? eventSymbol?.AddMethod : eventSymbol?.RemoveMethod;
-				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, eventRef, eventSymbol!.Name, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, eventRef, eventSymbol!.Name, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
@@ -146,7 +146,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			{
 				//get the rhs method we're calling, then analyze
 				var rhsSymbol = op.TargetMethod;
-				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
@@ -165,7 +165,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				if (op.Syntax is CommonForEachStatementSyntax forEachStatementSyntax)
 				{
 					var rhsSymbol = op.SemanticModel.GetForEachStatementInfo(forEachStatementSyntax).GetEnumeratorMethod;
-					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, lhs, "GetEnumerator", false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+					if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, lhs, "GetEnumerator", ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 				}
 			}
 		}
@@ -205,7 +205,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		if (rightType == null) return;
 		var objectToString = (IMethodSymbol)context.Compilation.ObjectType.GetMembers("ToString").Single((x) => x is IMethodSymbol ms && ms.Parameters.Length == 0 && ms.ReturnType.SpecialType == SpecialType.System_String);
 		var rhsSymbol = rightType.GetOverrideFor(objectToString) ?? objectToString;
-		AnalyzeMemberAccess(right, rhsSymbol, right, null, true, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+		AnalyzeMemberAccess(right, rhsSymbol, right, null, ReadOnlyMemberKind.SymbolOnly, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 	}
 
 	private static void AnalyzeImplicitIndexer(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
@@ -296,7 +296,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 				//analyze if we have a method, and as long as the instance is ref readonly
 				if (rhsSymbol == null) return;
-				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, true, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, ReadOnlyMemberKind.Any, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
@@ -317,7 +317,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				var rhsSymbol = info.GetAwaiterMethod;
 
 				//analyze if we found the GetAwaiter method
-				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
@@ -373,7 +373,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 							//analyze if we found a (non-ambiguous) GetPinnableReference method
 							if (info.Symbol is not IMethodSymbol ms) return;
-							AnalyzeMemberAccess(op, ms, op, "GetPinnableReference", false, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+							AnalyzeMemberAccess(op, ms, op, "GetPinnableReference", ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 						}
 					}
 				}
@@ -381,16 +381,25 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		}
 	}
 
-	private static void AnalyzeMemberAccess(IOperation lhs, IMethodSymbol rhsSymbol, IOperation diagnosticLocationOperation, string? rhsSymbolName, bool forceIncludeReadOnlyMember, CancellationToken cancellationToken, Action<Diagnostic> reportDiagnostic, bool runHAM0001, bool runHAM0003)
+	[Flags]
+	private enum ReadOnlyMemberKind
+	{
+		None,
+		SymbolOnly,
+		TypeOnly,
+		Any,
+	}
+
+	private static void AnalyzeMemberAccess(IOperation lhs, IMethodSymbol rhsSymbol, IOperation diagnosticLocationOperation, string? rhsSymbolName, ReadOnlyMemberKind forceIncludeReadOnlyMembers, CancellationToken cancellationToken, Action<Diagnostic> reportDiagnostic, bool runHAM0001, bool runHAM0003)
 	{
 		//check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
 
 		//check if it's not an applicable rhs (only warn on non-readonly instance struct method call)
 		//additionally, we emulate when C# emits a defensive copy with generics (emit when not constrained to either class / struct, or when method is defined on interface)
-		if ((!forceIncludeReadOnlyMember && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic || rhsSymbol.IsExtension) return;
+		if (((forceIncludeReadOnlyMembers & ReadOnlyMemberKind.SymbolOnly) == 0 && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic || rhsSymbol.IsExtension) return;
 		var lhsType = lhs.Type!;
-		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || (!forceIncludeReadOnlyMember && lhsType.IsReadOnly)) return;
+		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || ((forceIncludeReadOnlyMembers & ReadOnlyMemberKind.TypeOnly) == 0 && lhsType.IsReadOnly)) return;
 
 		//check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
