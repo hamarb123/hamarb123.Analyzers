@@ -90,6 +90,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						result = "" + 0 + {|#21:value3|};
 						result += {|#22:value3|};
 					}
+
+					public void M4(in S3 value1, in S6 value2)
+					{
+						//Reversed order should behave the same
+						_ = {|#23:value1|} + "";
+						_ = value2 + "";
+					}
 				}
 
 				public struct S1
@@ -155,6 +162,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			var expected20 = VerifyCS.Diagnostic("HAM0001").WithLocation(20).WithArguments("ToString", "value3");
 			var expected21 = VerifyCS.Diagnostic("HAM0001").WithLocation(21).WithArguments("ToString", "value3");
 			var expected22 = VerifyCS.Diagnostic("HAM0001").WithLocation(22).WithArguments("ToString", "value3");
+			var expected23 = VerifyCS.Diagnostic("HAM0003").WithLocation(23).WithArguments("ToString", "value1");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
@@ -162,7 +170,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				expected8, expected9, expected10, expected11,
 				expected12, expected13, expected14, expected15,
 				expected16, expected17, expected18, expected19,
-				expected20, expected21, expected22);
+				expected20, expected21, expected22, expected23);
 		}
 
 		[Fact]

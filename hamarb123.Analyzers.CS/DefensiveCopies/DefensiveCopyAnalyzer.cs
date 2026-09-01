@@ -180,6 +180,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			left = binaryOp.LeftOperand;
 			right = binaryOp.RightOperand;
 			if (binaryOp.OperatorKind != BinaryOperatorKind.Add) return;
+			if (left.Type?.SpecialType != SpecialType.System_String) (left, right) = (right, left); //allow detecting implicit object + string as well
 		}
 		else if (context.Operation is ICompoundAssignmentOperation compoundAssignmentOp)
 		{
@@ -188,7 +189,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			if (compoundAssignmentOp.OperatorKind != BinaryOperatorKind.Add) return;
 		}
 
-		//check if it's string + implicit object
+		//check if it's string + implicit object or implicit object + string
 		if (left == null || right == null) return;
 		if (left.Type?.SpecialType != SpecialType.System_String) return;
 		if (right.Type?.SpecialType != SpecialType.System_Object) return;
