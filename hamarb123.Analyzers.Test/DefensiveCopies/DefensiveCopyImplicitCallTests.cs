@@ -787,14 +787,12 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyRangeIndex()
 		{
-			//https://github.com/dotnet/roslyn/issues/72008
-			//Compiler emits defensive copy for ones passed by in, even though members are readonly
 			const string source = """
 				using System;
 
 				public class C
 				{
-					public void M1(ref S1 a, ref S2 b, ref S3 c, ref S4 d, Index i, Range r)
+					public void M1(ref S1 a, ref S2 b, ref S3 c, ref S4 d, ref S5 e, ref S6 f, ref S7 g, ref S8 h, Index i, Range r)
 					{
 						//No defensive copy
 						_ = a[4..8];
@@ -835,49 +833,129 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = d[0..i];
 						_ = d[r];
 						_ = d[0..(Index)1];
+
+						//No defensive copy
+						_ = e[4..8];
+						_ = e[4..^8];
+						_ = e[^1];
+						_ = e[0];
+						_ = e[i];
+						_ = e[0..i];
+						_ = e[r];
+						_ = e[0..(Index)1];
+
+						//No defensive copy
+						_ = f[4..8];
+						_ = f[4..^8];
+						_ = f[^1];
+						_ = f[0];
+						_ = f[i];
+						_ = f[0..i];
+						_ = f[r];
+						_ = f[0..(Index)1];
+
+						//No defensive copy
+						_ = g[4..8];
+						_ = g[4..^8];
+						_ = g[^1];
+						_ = g[0];
+						_ = g[i];
+						_ = g[0..i];
+						_ = g[r];
+						_ = g[0..(Index)1];
+
+						//No defensive copy
+						_ = h[4..8];
+						_ = h[4..^8];
+						_ = h[^1];
+						_ = h[0];
+						_ = h[i];
+						_ = h[0..i];
+						_ = h[r];
+						_ = h[0..(Index)1];
 					}
 
-					public void M2(in S1 a, in S2 b, in S3 c, in S4 d, Index i, Range r)
+					public void M2(in S1 a, in S2 b, in S3 c, in S4 d, in S5 e, in S6 f, in S7 g, in S8 h, Index i, Range r)
 					{
-						//Non-mutating defensive copy
-						_ = {|#0:a[4..8]|};
-						_ = {|#1:a[4..^8]|};
-						_ = {|#2:a[^1]|};
-						_ = a[0]; //No defensive copy
-						_ = {|#3:a[i]|};
-						_ = {|#4:a[0..i]|};
-						_ = {|#5:a[r]|};
-						_ = {|#6:a[0..(Index)1]|};
+						//No defensive copy
+						_ = a[4..8];
+						_ = a[4..^8];
+						_ = a[^1];
+						_ = a[0];
+						_ = a[i];
+						_ = a[0..i];
+						_ = a[r];
+						_ = a[0..(Index)1];
 
 						//Defensive copy
-						_ = {|#7:b[4..8]|};
-						_ = {|#8:b[4..^8]|};
-						_ = {|#9:b[^1]|};
-						_ = {|#10:b[0]|};
-						_ = {|#11:b[i]|};
-						_ = {|#12:b[0..i]|};
-						_ = {|#13:b[r]|};
-						_ = {|#14:b[0..(Index)1]|};
+						_ = {|#0:b[4..8]|};
+						_ = {|#1:b[4..^8]|};
+						_ = {|#2:b[^1]|};
+						_ = {|#3:b[0]|};
+						_ = {|#4:b[i]|};
+						_ = {|#5:b[0..i]|};
+						_ = {|#6:b[r]|};
+						_ = {|#7:b[0..(Index)1]|};
 
 						//Defensive copy
-						_ = {|#15:c[4..8]|};
-						_ = {|#16:c[4..^8]|};
-						_ = {|#17:c[^1]|};
-						_ = {|#18:c[0]|};
-						_ = {|#19:c[i]|};
-						_ = {|#20:c[0..i]|};
-						_ = {|#21:c[r]|};
-						_ = {|#22:c[0..(Index)1]|};
+						_ = {|#8:c[4..8]|};
+						_ = {|#9:c[4..^8]|};
+						_ = {|#10:c[^1]|};
+						_ = {|#11:c[0]|};
+						_ = {|#12:c[i]|};
+						_ = {|#13:c[0..i]|};
+						_ = {|#14:c[r]|};
+						_ = {|#15:c[0..(Index)1]|};
 
 						//Defensive copy
-						_ = {|#23:d[4..8]|}; //Unnecessary defensive copy
-						_ = {|#24:d[4..^8]|};
-						_ = {|#25:d[^1]|};
+						_ = d[4..8]; //No defensive copy
+						_ = {|#16:d[4..^8]|};
+						_ = {|#17:d[^1]|};
 						_ = d[0]; //No defensive copy
-						_ = {|#26:d[i]|};
-						_ = {|#27:d[0..i]|};
-						_ = {|#28:d[r]|};
-						_ = {|#29:d[0..(Index)1]|};
+						_ = {|#18:d[i]|};
+						_ = {|#19:d[0..i]|};
+						_ = {|#20:d[r]|};
+						_ = {|#21:d[0..(Index)1]|};
+
+						//Defensive copy
+						_ = {|#22:e[4..8]|};
+						_ = {|#23:e[4..^8]|};
+						_ = e[^1]; //No defensive copy
+						_ = e[0]; //No defensive copy
+						_ = e[i]; //No defensive copy
+						_ = {|#24:e[0..i]|};
+						_ = {|#25:e[r]|};
+						_ = {|#26:e[0..(Index)1]|};
+
+						//Defensive copy
+						_ = f[4..8]; //No defensive copy
+						_ = f[4..^8]; //No defensive copy
+						_ = {|#27:f[^1]|};
+						_ = {|#28:f[0]|};
+						_ = {|#29:f[i]|};
+						_ = f[0..i]; //No defensive copy
+						_ = f[r]; //No defensive copy
+						_ = f[0..(Index)1]; //No defensive copy
+
+						//Defensive copy
+						_ = {|#30:g[4..8]|};
+						_ = {|#31:g[4..^8]|};
+						_ = {|#32:g[^1]|};
+						_ = g[0]; //No defensive copy
+						_ = {|#33:g[i]|};
+						_ = {|#34:g[0..i]|};
+						_ = {|#35:g[r]|};
+						_ = {|#36:g[0..(Index)1]|};
+
+						//Defensive copy
+						_ = h[4..8]; //No defensive copy
+						_ = {|#37:h[4..^8]|};
+						_ = {|#38:h[^1]|};
+						_ = {|#39:h[0]|};
+						_ = {|#40:h[i]|};
+						_ = {|#41:h[0..i]|};
+						_ = {|#42:h[r]|};
+						_ = {|#43:h[0..(Index)1]|};
 					}
 				}
 
@@ -908,38 +986,80 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public readonly int this[int index] => 0;
 					public readonly S4 Slice(int start, int length) => this;
 				}
+
+				public struct S5
+				{
+					public readonly int Length => 0;
+					public readonly int this[int index] => 0;
+					public S5 Slice(int start, int length) => this;
+				}
+
+				public struct S6
+				{
+					public readonly int Length => 0;
+					public int this[int index] => 0;
+					public readonly S6 Slice(int start, int length) => this;
+				}
+
+				public struct S7
+				{
+					public int Length => 0;
+					public readonly int this[int index] => 0;
+					public S7 Slice(int start, int length) => this;
+				}
+
+				public struct S8
+				{
+					public int Length => 0;
+					public int this[int index] => 0;
+					public readonly S8 Slice(int start, int length) => this;
+				}
 				""";
 
-			var expected0 = VerifyCS.Diagnostic("HAM0003").WithLocation(0).WithArguments("this[]", "a");
-			var expected1 = VerifyCS.Diagnostic("HAM0003").WithLocation(1).WithArguments("this[]", "a");
-			var expected2 = VerifyCS.Diagnostic("HAM0003").WithLocation(2).WithArguments("this[]", "a");
-			var expected3 = VerifyCS.Diagnostic("HAM0003").WithLocation(3).WithArguments("this[]", "a");
-			var expected4 = VerifyCS.Diagnostic("HAM0003").WithLocation(4).WithArguments("this[]", "a");
-			var expected5 = VerifyCS.Diagnostic("HAM0003").WithLocation(5).WithArguments("this[]", "a");
-			var expected6 = VerifyCS.Diagnostic("HAM0003").WithLocation(6).WithArguments("this[]", "a");
+			var expected0 = VerifyCS.Diagnostic("HAM0001").WithLocation(0).WithArguments("this[]", "b");
+			var expected1 = VerifyCS.Diagnostic("HAM0001").WithLocation(1).WithArguments("this[]", "b");
+			var expected2 = VerifyCS.Diagnostic("HAM0001").WithLocation(2).WithArguments("this[]", "b");
+			var expected3 = VerifyCS.Diagnostic("HAM0001").WithLocation(3).WithArguments("this[]", "b");
+			var expected4 = VerifyCS.Diagnostic("HAM0001").WithLocation(4).WithArguments("this[]", "b");
+			var expected5 = VerifyCS.Diagnostic("HAM0001").WithLocation(5).WithArguments("this[]", "b");
+			var expected6 = VerifyCS.Diagnostic("HAM0001").WithLocation(6).WithArguments("this[]", "b");
 			var expected7 = VerifyCS.Diagnostic("HAM0001").WithLocation(7).WithArguments("this[]", "b");
-			var expected8 = VerifyCS.Diagnostic("HAM0001").WithLocation(8).WithArguments("this[]", "b");
-			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("this[]", "b");
-			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("this[]", "b");
-			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("this[]", "b");
-			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("this[]", "b");
-			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("this[]", "b");
-			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("this[]", "b");
+			var expected8 = VerifyCS.Diagnostic("HAM0001").WithLocation(8).WithArguments("this[]", "c");
+			var expected9 = VerifyCS.Diagnostic("HAM0001").WithLocation(9).WithArguments("this[]", "c");
+			var expected10 = VerifyCS.Diagnostic("HAM0001").WithLocation(10).WithArguments("this[]", "c");
+			var expected11 = VerifyCS.Diagnostic("HAM0001").WithLocation(11).WithArguments("this[]", "c");
+			var expected12 = VerifyCS.Diagnostic("HAM0001").WithLocation(12).WithArguments("this[]", "c");
+			var expected13 = VerifyCS.Diagnostic("HAM0001").WithLocation(13).WithArguments("this[]", "c");
+			var expected14 = VerifyCS.Diagnostic("HAM0001").WithLocation(14).WithArguments("this[]", "c");
 			var expected15 = VerifyCS.Diagnostic("HAM0001").WithLocation(15).WithArguments("this[]", "c");
-			var expected16 = VerifyCS.Diagnostic("HAM0001").WithLocation(16).WithArguments("this[]", "c");
-			var expected17 = VerifyCS.Diagnostic("HAM0001").WithLocation(17).WithArguments("this[]", "c");
-			var expected18 = VerifyCS.Diagnostic("HAM0001").WithLocation(18).WithArguments("this[]", "c");
-			var expected19 = VerifyCS.Diagnostic("HAM0001").WithLocation(19).WithArguments("this[]", "c");
-			var expected20 = VerifyCS.Diagnostic("HAM0001").WithLocation(20).WithArguments("this[]", "c");
-			var expected21 = VerifyCS.Diagnostic("HAM0001").WithLocation(21).WithArguments("this[]", "c");
-			var expected22 = VerifyCS.Diagnostic("HAM0001").WithLocation(22).WithArguments("this[]", "c");
-			var expected23 = VerifyCS.Diagnostic("HAM0003").WithLocation(23).WithArguments("this[]", "d");
-			var expected24 = VerifyCS.Diagnostic("HAM0001").WithLocation(24).WithArguments("Length", "d");
-			var expected25 = VerifyCS.Diagnostic("HAM0001").WithLocation(25).WithArguments("Length", "d");
-			var expected26 = VerifyCS.Diagnostic("HAM0001").WithLocation(26).WithArguments("Length", "d");
-			var expected27 = VerifyCS.Diagnostic("HAM0001").WithLocation(27).WithArguments("Length", "d");
-			var expected28 = VerifyCS.Diagnostic("HAM0001").WithLocation(28).WithArguments("Length", "d");
-			var expected29 = VerifyCS.Diagnostic("HAM0001").WithLocation(29).WithArguments("Length", "d");
+			var expected16 = VerifyCS.Diagnostic("HAM0001").WithLocation(16).WithArguments("Length", "d");
+			var expected17 = VerifyCS.Diagnostic("HAM0001").WithLocation(17).WithArguments("Length", "d");
+			var expected18 = VerifyCS.Diagnostic("HAM0001").WithLocation(18).WithArguments("Length", "d");
+			var expected19 = VerifyCS.Diagnostic("HAM0001").WithLocation(19).WithArguments("Length", "d");
+			var expected20 = VerifyCS.Diagnostic("HAM0001").WithLocation(20).WithArguments("Length", "d");
+			var expected21 = VerifyCS.Diagnostic("HAM0001").WithLocation(21).WithArguments("Length", "d");
+			var expected22 = VerifyCS.Diagnostic("HAM0001").WithLocation(22).WithArguments("this[]", "e");
+			var expected23 = VerifyCS.Diagnostic("HAM0001").WithLocation(23).WithArguments("this[]", "e");
+			var expected24 = VerifyCS.Diagnostic("HAM0001").WithLocation(24).WithArguments("this[]", "e");
+			var expected25 = VerifyCS.Diagnostic("HAM0001").WithLocation(25).WithArguments("this[]", "e");
+			var expected26 = VerifyCS.Diagnostic("HAM0001").WithLocation(26).WithArguments("this[]", "e");
+			var expected27 = VerifyCS.Diagnostic("HAM0001").WithLocation(27).WithArguments("this[]", "f");
+			var expected28 = VerifyCS.Diagnostic("HAM0001").WithLocation(28).WithArguments("this[]", "f");
+			var expected29 = VerifyCS.Diagnostic("HAM0001").WithLocation(29).WithArguments("this[]", "f");
+			var expected30 = VerifyCS.Diagnostic("HAM0001").WithLocation(30).WithArguments("this[]", "g");
+			var expected31 = VerifyCS.Diagnostic("HAM0001").WithLocation(31).WithArguments("this[]", "g");
+			var expected32 = VerifyCS.Diagnostic("HAM0001").WithLocation(32).WithArguments("Length", "g");
+			var expected33 = VerifyCS.Diagnostic("HAM0001").WithLocation(33).WithArguments("Length", "g");
+			var expected34 = VerifyCS.Diagnostic("HAM0001").WithLocation(34).WithArguments("this[]", "g");
+			var expected35 = VerifyCS.Diagnostic("HAM0001").WithLocation(35).WithArguments("this[]", "g");
+			var expected36 = VerifyCS.Diagnostic("HAM0001").WithLocation(36).WithArguments("this[]", "g");
+			var expected37 = VerifyCS.Diagnostic("HAM0001").WithLocation(37).WithArguments("Length", "h");
+			var expected38 = VerifyCS.Diagnostic("HAM0001").WithLocation(38).WithArguments("this[]", "h");
+			var expected39 = VerifyCS.Diagnostic("HAM0001").WithLocation(39).WithArguments("this[]", "h");
+			var expected40 = VerifyCS.Diagnostic("HAM0001").WithLocation(40).WithArguments("this[]", "h");
+			var expected41 = VerifyCS.Diagnostic("HAM0001").WithLocation(41).WithArguments("Length", "h");
+			var expected42 = VerifyCS.Diagnostic("HAM0001").WithLocation(42).WithArguments("Length", "h");
+			var expected43 = VerifyCS.Diagnostic("HAM0001").WithLocation(43).WithArguments("Length", "h");
 
 			await VerifyCS.VerifyAnalyzerAsync(source,
 				expected0, expected1, expected2, expected3,
@@ -949,7 +1069,10 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				expected16, expected17, expected18, expected19,
 				expected20, expected21, expected22, expected23,
 				expected24, expected25, expected26, expected27,
-				expected28, expected29);
+				expected28, expected29, expected30, expected31,
+				expected32, expected33, expected34, expected35,
+				expected36, expected37, expected38, expected39,
+				expected40, expected41, expected42, expected43);
 		}
 	}
 }

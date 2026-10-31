@@ -295,9 +295,9 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 					}
 				}
 
-				//analyze if we have a method, and as long as the instance is ref readonly
+				//analyze if we have a method
 				if (rhsSymbol == null) return;
-				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, ReadOnlyMemberKind.Any, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
+				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
 	}
