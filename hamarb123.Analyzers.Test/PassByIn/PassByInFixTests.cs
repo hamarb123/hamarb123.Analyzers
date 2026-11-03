@@ -36,10 +36,16 @@ namespace hamarb123.Analyzers.Test.PassByIn
 						M1({|HAM0008:b ? ref i : ref y|});
 						M1({|HAM0008:b ? i : i == y ? ref i : ref y|});
 						M1({|HAM0008:b ? i : i == y ? i : y|});
+						M1({|HAM0008:M2({|HAM0008:i|})|});
 					}
 
 					public void M1(in int x)
 					{
+					}
+
+					public ref readonly int M2(in int x)
+					{
+						return ref x;
 					}
 				}
 
@@ -87,10 +93,16 @@ namespace hamarb123.Analyzers.Test.PassByIn
 						M1(in b ? ref i : ref y);
 						M1(in b ? ref i : ref i == y ? ref i : ref y);
 						M1(in b ? ref i : ref i == y ? ref i : ref y);
+						M1(in M2(in i));
 					}
 
 					public void M1(in int x)
 					{
+					}
+
+					public ref readonly int M2(in int x)
+					{
+						return ref x;
 					}
 				}
 
