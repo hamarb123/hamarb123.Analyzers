@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 using VerifyVB = hamarb123.Analyzers.Test.VisualBasicAnalyzerVerifier<
 	hamarb123.Analyzers.StringNonOrdinal.StringNonOrdinalAnalyzer>;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<

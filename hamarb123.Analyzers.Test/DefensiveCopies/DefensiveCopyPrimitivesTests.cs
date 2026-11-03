@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using hamarb123.Analyzers.DefensiveCopies;
-using Microsoft.CodeAnalysis.Testing;
+﻿using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<
 	hamarb123.Analyzers.DefensiveCopies.DefensiveCopyAnalyzer>;
@@ -33,7 +27,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					ref int? value20
 				)
 				{
-					//No defensive copies
+					// No defensive copies
 					value0.ToString();
 					value1.ToString();
 					value2.ToString();
@@ -78,9 +72,9 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					in int? value20
 				)
 				{
-					//Defensive copy emitted on platforms (0-17) where it's not marked as readonly, even though it's a primitive.
-					//Defensive copy also emitted on 18 always
-					//value19 is always a real defensive copy, and value20 has real defensive copies for .Equals, .GetHashCode, and .ToString
+					// Defensive copy emitted on platforms (0-17) where it's not marked as readonly, even though it's a primitive.
+					// Defensive copy also emitted on 18 always
+					// value19 is always a real defensive copy, and value20 has real defensive copies for .Equals, .GetHashCode, and .ToString
 					{|#0:value0.ToString()|};
 					{|#1:value1.ToString()|};
 					{|#2:value2.ToString()|};

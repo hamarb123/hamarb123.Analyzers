@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Testing;
-using Xunit;
+﻿using Xunit;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<
 	hamarb123.Analyzers.DefensiveCopies.DefensiveCopyAnalyzer>;
 
@@ -15,7 +9,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyStringAddition()
 		{
-			//https://github.com/dotnet/roslyn/issues/72044
+			// https://github.com/dotnet/roslyn/issues/72044
 			const string source = """
 				using System;
 				using System.Runtime.CompilerServices;
@@ -24,7 +18,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1, in S3 value2, in S4 value3, in S5<S1> value4, in S5<S3> value5, in S5<S4> value6, in S6 value7, in S7 value8, in S8 value9)
 					{
-						//No defensive copies necessary (all operations are readonly)
+						// No defensive copies necessary (all operations are readonly)
 						string result;
 
 						result = "" + {|#0:value1|};
@@ -41,7 +35,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						result = "" + 0 + {|#6:value5.Value|};
 						result += {|#7:value5.Value|};
 
-						//Readonly struct doesn't emit defensive copy
+						// Readonly struct doesn't emit defensive copy
 
 						result = "" + value7;
 						result += value7;
@@ -55,7 +49,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S2 value1, in S5<S2> value2)
 					{
-						//All defensive copies
+						// All defensive copies
 						string result;
 
 						result = "" + {|#8:value1|};
@@ -75,17 +69,17 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					{
 						string result;
 
-						//All defensive copies
+						// All defensive copies
 						result = "" + {|#17:value1|};
 						result = "" + 0 + {|#18:value1|};
 						result += {|#19:value1|};
 
-						//No defensive copies necessary
+						// No defensive copies necessary
 						result = "" + value2;
 						result = "" + 0 + value2;
 						result += value2;
 
-						//All defensive copies
+						// All defensive copies
 						result = "" + {|#20:value3|};
 						result = "" + 0 + {|#21:value3|};
 						result += {|#22:value3|};
@@ -93,7 +87,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M4(in S3 value1, in S6 value2)
 					{
-						//Reversed order should behave the same
+						// Reversed order should behave the same
 						_ = {|#23:value1|} + "";
 						_ = value2 + "";
 					}
@@ -185,7 +179,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						in S1 val1, in S2 val2, in S3 val3, in S4 val4,
 						in S5 val5, in S6 val6, in S7 val7, in S8 val8)
 					{
-						//No defensive copies
+						// No defensive copies
 
 						using (var x1 = val1) { }
 						using (var x2 = val2) { }
@@ -274,8 +268,8 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyForeach()
 		{
-			//https://github.com/dotnet/roslyn/issues/72004
-			//https://github.com/dotnet/roslyn/issues/72008
+			// https://github.com/dotnet/roslyn/issues/72004
+			// https://github.com/dotnet/roslyn/issues/72008
 			const string source = """
 				using System;
 				using System.Collections;
@@ -290,7 +284,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					)
 						where T : IEnumerable<S1>
 					{
-						//No defensive copies necessary (compiler still emits for S4 and S5 though)
+						// No defensive copies necessary (compiler still emits for S4 and S5 though)
 						foreach (var x in {|#0:value4|}) { }
 						foreach (var x in {|#1:value5|}) { }
 						foreach (var x in value6) { }
@@ -315,7 +309,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					)
 						where T : IEnumerable<S1>
 					{
-						//All defensive copies
+						// All defensive copies
 						foreach (var x in {|#4:value1|}) { }
 						foreach (var x in {|#5:value2|}) { }
 						foreach (var x in {|#6:value3|}) { }
@@ -437,7 +431,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyDeconstruction()
 		{
-			//https://github.com/dotnet/roslyn/issues/72008
+			// https://github.com/dotnet/roslyn/issues/72008
 			const string source = """
 				using System;
 
@@ -445,7 +439,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1, in S2 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						var (a1, b1) = value1;
 						var (a2, b2) = value2;
 					}
@@ -495,7 +489,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						where T1 : I1 where T2 : struct, I1 where T3 : class, I1 where T4 : C1 where T1B : I2 where T2B : struct, I2 where T3B : class, I2
 						where RT1 : I1, allows ref struct where RT2 : struct, I1, allows ref struct where RT1B : I2, allows ref struct where RT2B : struct, I2, allows ref struct
 					{
-						//No defensive copies
+						// No defensive copies
 						fixed (int* ptr = value2RO) { }
 						fixed (int* ptr = value1) { }
 						fixed (int* ptr = value2) { }
@@ -538,7 +532,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (void* ptr = value1) { }
 						fixed (int* ptr1 = value1, ptr2 = value2) { }
 
-						//No defensive copies (pointer)
+						// No defensive copies (pointer)
 						fixed (void* ptr = &value2RO) { }
 						fixed (void* ptr = &value1) { }
 						fixed (void* ptr = &value2) { }
@@ -553,7 +547,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (void* ptr = &valueT3) { }
 						fixed (void* ptr = &valueT4RO) { }
 						fixed (void* ptr = &valueT4) { }
-						//fixed (void* ptr = &valueC1) { }
+						// fixed (void* ptr = &valueC1) { }
 						fixed (void* ptr = &refValueC1) { }
 						fixed (void* ptr = &refROValueC1) { }
 						fixed (void* ptr = &valueT1B) { }
@@ -590,7 +584,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						where T1 : I1 where T2 : struct, I1 where T1B : I2 where T2B : struct, I2
 						where RT1 : I1, allows ref struct where RT2 : struct, I1, allows ref struct where RT1B : I2, allows ref struct where RT2B : struct, I2, allows ref struct
 					{
-						//All defensive copies
+						// All defensive copies
 						fixed (int* ptr = {|#0:value1RO|}) { }
 						fixed (int* ptr = {|#1:valueT1RO|}) { }
 						fixed (int* ptr = {|#2:valueT2RO|}) { }
@@ -600,35 +594,35 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						fixed (int* ptr = {|#6:valueT1RO|}!) { }
 						fixed (int* ptr = ({|#7:valueT1RO|}!)) { }
 
-						//Some defensive copies (first declaration always, second for first line also)
+						// Some defensive copies (first declaration always, second for first line also)
 						fixed (int* ptr1 = {|#8:value1RO|}, ptr2 = {|#9:valueT1RO|}) { }
 						fixed (void* ptr1 = {|#10:value1RO|}) { }
 						fixed (void* ptr1 = {|#11:value1RO|}, ptr2 = &value1RO) { }
 						fixed (void* ptr1 = {|#12:value1RO|}, ptr2 = value1) { }
 						fixed (void* ptr1 = {|#13:value1RO|}, ptr2 = value2RO) { }
 
-						//No defensive copies (pointer)
+						// No defensive copies (pointer)
 						fixed (void* ptr = &value1RO) { }
 						fixed (void* ptr = &valueT1RO) { }
 						fixed (void* ptr = &valueT2RO) { }
 						fixed (void* ptr = &valueT1BRO) { }
 						fixed (void* ptr = &valueT2BRO) { }
 
-						//All defensive copies
+						// All defensive copies
 						fixed (int* ptr = {|#14:rsValue1RO|}) { }
 						fixed (int* ptr = {|#15:rsValueRT1RO|}) { }
 						fixed (int* ptr = {|#16:rsValueRT2RO|}) { }
 						fixed (int* ptr = {|#17:rsValueRT1BRO|}) { }
 						fixed (int* ptr = {|#18:rsValueRT2BRO|}) { }
 
-						//Some defensive copies (first declaration always, second for first line also)
+						// Some defensive copies (first declaration always, second for first line also)
 						fixed (int* ptr1 = {|#19:rsValue1RO|}, ptr2 = {|#20:rsValueRT1RO|}) { }
 						fixed (void* ptr1 = {|#21:rsValue1RO|}) { }
 						fixed (void* ptr1 = {|#22:rsValue1RO|}, ptr2 = &rsValue1RO) { }
 						fixed (void* ptr1 = {|#23:rsValue1RO|}, ptr2 = rsValue1) { }
 						fixed (void* ptr1 = {|#24:rsValue1RO|}, ptr2 = rsValue2RO) { }
 
-						//No defensive copies (pointer)
+						// No defensive copies (pointer)
 						fixed (void* ptr = &rsValue1RO) { }
 						fixed (void* ptr = &rsValueRT1RO) { }
 						fixed (void* ptr = &rsValueRT2RO) { }
@@ -664,10 +658,10 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					private ref int GetPinnableReference() => throw null;
 					public static unsafe void M2(in S6 value6RO)
 					{
-						//All defensive copies
+						// All defensive copies
 						fixed (int* ptr = {|#25:value6RO|}) { }
 
-						//No defensive copies (pointer)
+						// No defensive copies (pointer)
 						fixed (void* ptr = &value6RO) { }
 					}
 				}
@@ -704,10 +698,10 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					private ref int GetPinnableReference() => throw null;
 					public static unsafe void M2(in RS6 rsValue6RO)
 					{
-						//All defensive copies
+						// All defensive copies
 						fixed (int* ptr = {|#26:rsValue6RO|}) { }
 
-						//No defensive copies (pointer)
+						// No defensive copies (pointer)
 						fixed (void* ptr = &rsValue6RO) { }
 					}
 				}
@@ -794,7 +788,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(ref S1 a, ref S2 b, ref S3 c, ref S4 d, ref S5 e, ref S6 f, ref S7 g, ref S8 h, Index i, Range r)
 					{
-						//No defensive copy
+						// No defensive copy
 						_ = a[4..8];
 						_ = a[4..^8];
 						_ = a[^1];
@@ -804,7 +798,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = a[r];
 						_ = a[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = b[4..8];
 						_ = b[4..^8];
 						_ = b[^1];
@@ -814,7 +808,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = b[r];
 						_ = b[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = c[4..8];
 						_ = c[4..^8];
 						_ = c[^1];
@@ -824,7 +818,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = c[r];
 						_ = c[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = d[4..8];
 						_ = d[4..^8];
 						_ = d[^1];
@@ -834,7 +828,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = d[r];
 						_ = d[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = e[4..8];
 						_ = e[4..^8];
 						_ = e[^1];
@@ -844,7 +838,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = e[r];
 						_ = e[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = f[4..8];
 						_ = f[4..^8];
 						_ = f[^1];
@@ -854,7 +848,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = f[r];
 						_ = f[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = g[4..8];
 						_ = g[4..^8];
 						_ = g[^1];
@@ -864,7 +858,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = g[r];
 						_ = g[0..(Index)1];
 
-						//No defensive copy
+						// No defensive copy
 						_ = h[4..8];
 						_ = h[4..^8];
 						_ = h[^1];
@@ -877,7 +871,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S1 a, in S2 b, in S3 c, in S4 d, in S5 e, in S6 f, in S7 g, in S8 h, Index i, Range r)
 					{
-						//No defensive copy
+						// No defensive copy
 						_ = a[4..8];
 						_ = a[4..^8];
 						_ = a[^1];
@@ -887,7 +881,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = a[r];
 						_ = a[0..(Index)1];
 
-						//Defensive copy
+						// Defensive copy
 						_ = {|#0:b[4..8]|};
 						_ = {|#1:b[4..^8]|};
 						_ = {|#2:b[^1]|};
@@ -897,7 +891,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = {|#6:b[r]|};
 						_ = {|#7:b[0..(Index)1]|};
 
-						//Defensive copy
+						// Defensive copy
 						_ = {|#8:c[4..8]|};
 						_ = {|#9:c[4..^8]|};
 						_ = {|#10:c[^1]|};
@@ -907,48 +901,48 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						_ = {|#14:c[r]|};
 						_ = {|#15:c[0..(Index)1]|};
 
-						//Defensive copy
-						_ = d[4..8]; //No defensive copy
+						// Defensive copy
+						_ = d[4..8]; // No defensive copy
 						_ = {|#16:d[4..^8]|};
 						_ = {|#17:d[^1]|};
-						_ = d[0]; //No defensive copy
+						_ = d[0]; // No defensive copy
 						_ = {|#18:d[i]|};
 						_ = {|#19:d[0..i]|};
 						_ = {|#20:d[r]|};
 						_ = {|#21:d[0..(Index)1]|};
 
-						//Defensive copy
+						// Defensive copy
 						_ = {|#22:e[4..8]|};
 						_ = {|#23:e[4..^8]|};
-						_ = e[^1]; //No defensive copy
-						_ = e[0]; //No defensive copy
-						_ = e[i]; //No defensive copy
+						_ = e[^1]; // No defensive copy
+						_ = e[0]; // No defensive copy
+						_ = e[i]; // No defensive copy
 						_ = {|#24:e[0..i]|};
 						_ = {|#25:e[r]|};
 						_ = {|#26:e[0..(Index)1]|};
 
-						//Defensive copy
-						_ = f[4..8]; //No defensive copy
-						_ = f[4..^8]; //No defensive copy
+						// Defensive copy
+						_ = f[4..8]; // No defensive copy
+						_ = f[4..^8]; // No defensive copy
 						_ = {|#27:f[^1]|};
 						_ = {|#28:f[0]|};
 						_ = {|#29:f[i]|};
-						_ = f[0..i]; //No defensive copy
-						_ = f[r]; //No defensive copy
-						_ = f[0..(Index)1]; //No defensive copy
+						_ = f[0..i]; // No defensive copy
+						_ = f[r]; // No defensive copy
+						_ = f[0..(Index)1]; // No defensive copy
 
-						//Defensive copy
+						// Defensive copy
 						_ = {|#30:g[4..8]|};
 						_ = {|#31:g[4..^8]|};
 						_ = {|#32:g[^1]|};
-						_ = g[0]; //No defensive copy
+						_ = g[0]; // No defensive copy
 						_ = {|#33:g[i]|};
 						_ = {|#34:g[0..i]|};
 						_ = {|#35:g[r]|};
 						_ = {|#36:g[0..(Index)1]|};
 
-						//Defensive copy
-						_ = h[4..8]; //No defensive copy
+						// Defensive copy
+						_ = h[4..8]; // No defensive copy
 						_ = {|#37:h[4..^8]|};
 						_ = {|#38:h[^1]|};
 						_ = {|#39:h[0]|};

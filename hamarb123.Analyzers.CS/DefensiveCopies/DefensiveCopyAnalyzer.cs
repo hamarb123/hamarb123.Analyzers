@@ -2,14 +2,11 @@
 using System.Collections.Immutable;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace hamarb123.Analyzers.DefensiveCopies;
@@ -39,20 +36,20 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	public sealed override void Initialize(AnalysisContext context)
 	{
-		//configure options
+		// Configure options
 		context.EnableConcurrentExecution();
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
-		//register callbacks
+		// Register callbacks
 		context.RegisterCompilationStartAction(CompilationStartAction);
 	}
 
 	private void CompilationStartAction(CompilationStartAnalysisContext context)
 	{
-		//get the enabled analysers
+		// Get the enabled analysers
 		bool runHAM0001 = context.Options.ShouldRun("HAM0001"), runHAM0003 = context.Options.ShouldRun("HAM0003");
 
-		//if at least 1 is enabled, register them all
+		// If at least 1 is enabled, register them all
 		if (runHAM0001 || runHAM0003)
 		{
 			context.RegisterOperationAction((ctx) => AnalyzePropertyReference(ctx, runHAM0001, runHAM0003), OperationKind.PropertyReference);
@@ -68,18 +65,18 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzePropertyReference(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IPropertyReferenceOperation op)
 		{
-			//get the lhs instance
+			// Get the lhs instance
 			var lhs = op.Instance;
 			if (lhs != null)
 			{
-				//get the property symbol, and determine if we're calling the getter or the setter
+				// Get the property symbol, and determine if we're calling the getter or the setter
 				var propertySymbol = op.Property;
 				var (getter, setter) = GetPropertyUsage(op, propertySymbol, context);
 
-				//check if we're in a nameof or similar further up
+				// Check if we're in a nameof or similar further up
 				context.CancellationToken.ThrowIfCancellationRequested();
 				IOperation? op2 = op;
 				while (op2 != null)
@@ -89,7 +86,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				}
 				context.CancellationToken.ThrowIfCancellationRequested();
 
-				//for both getter and setter (if used), get the rhs symbol, then analyze
+				// For both getter and setter (if used), get the rhs symbol, then analyze
 				if (getter)
 				{
 					var rhsSymbol = propertySymbol.GetMethod;
@@ -120,14 +117,14 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeEventAssignment(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IEventAssignmentOperation op && op.EventReference is IEventReferenceOperation eventRef)
 		{
-			//get the lhs instance
+			// Get the lhs instance
 			var lhs = eventRef.Instance;
 			if (lhs != null)
 			{
-				//get the event accessor we're invoking, then analyze
+				// Get the event accessor we're invoking, then analyze
 				var eventSymbol = eventRef.Event;
 				var rhsSymbol = op.Adds ? eventSymbol?.AddMethod : eventSymbol?.RemoveMethod;
 				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, eventRef, eventSymbol!.Name, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
@@ -137,14 +134,14 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeInvocation(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IInvocationOperation op)
 		{
-			//get the lhs instance
+			// Get the lhs instance
 			var lhs = op.Instance;
 			if (lhs != null)
 			{
-				//get the rhs method we're calling, then analyze
+				// Get the rhs method we're calling, then analyze
 				var rhsSymbol = op.TargetMethod;
 				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
@@ -153,15 +150,15 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeForEach(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IForEachLoopOperation op)
 		{
-			//get the loop variable
+			// Get the loop variable
 			var lhs = op.Collection;
 			if (lhs is IConversionOperation conversionOp && conversionOp.IsImplicit) lhs = conversionOp.Operand;
 			if (lhs != null)
 			{
-				//get the GetEnumerator method we're calling, then analyze
+				// Get the GetEnumerator method we're calling, then analyze
 				if (op.Syntax is CommonForEachStatementSyntax forEachStatementSyntax)
 				{
 					var rhsSymbol = op.SemanticModel.GetForEachStatementInfo(forEachStatementSyntax).GetEnumeratorMethod;
@@ -173,14 +170,14 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeBinaryOperation(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//get the left and right side, and exit if it's not + or +=
+		// Get the left and right side, and exit if it's not + or +=
 		IOperation? left = null, right = null;
 		if (context.Operation is IBinaryOperation binaryOp)
 		{
 			left = binaryOp.LeftOperand;
 			right = binaryOp.RightOperand;
 			if (binaryOp.OperatorKind != BinaryOperatorKind.Add) return;
-			if (left.Type?.SpecialType != SpecialType.System_String) (left, right) = (right, left); //allow detecting implicit object + string as well
+			if (left.Type?.SpecialType != SpecialType.System_String) (left, right) = (right, left); // Allow detecting implicit object + string as well
 		}
 		else if (context.Operation is ICompoundAssignmentOperation compoundAssignmentOp)
 		{
@@ -189,7 +186,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			if (compoundAssignmentOp.OperatorKind != BinaryOperatorKind.Add) return;
 		}
 
-		//check if it's string + implicit object or implicit object + string
+		// Check if it's string + implicit object or implicit object + string
 		if (left == null || right == null) return;
 		if (left.Type?.SpecialType != SpecialType.System_String) return;
 		if (right.Type?.SpecialType != SpecialType.System_Object) return;
@@ -201,7 +198,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		}
 		else return;
 
-		//lookup the ToString method, then analyze
+		// Lookup the ToString method, then analyze
 		var rightType = right.Type;
 		if (rightType == null) return;
 		var objectToString = (IMethodSymbol)context.Compilation.ObjectType.GetMembers("ToString").Single((x) => x is IMethodSymbol ms && ms.Parameters.Length == 0 && ms.ReturnType.SpecialType == SpecialType.System_String);
@@ -211,18 +208,18 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeImplicitIndexer(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IImplicitIndexerReferenceOperation op)
 		{
-			//get the lhs operation
+			// Get the lhs operation
 			var lhs = op.Instance;
 
 #if ROSLYN_4_7_0_OR_GREATER
-			//if we have an InlineArray, exit early
+			// If we have an InlineArray, exit early
 			if (lhs.Type?.GetAttributes().Any((x) => x.AttributeClass?.SpecialType == SpecialType.System_Runtime_CompilerServices_InlineArrayAttribute) == true) return;
 #endif
 
-			//get the rhs symbol/s
+			// Get the rhs symbol/s
 			List<IMethodSymbol> rhsSymbols = op.IndexerSymbol switch
 			{
 				IMethodSymbol ms => [ms],
@@ -236,16 +233,16 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 				_ => [],
 			};
 
-			//foreach rhs symbol
+			// For each rhs symbol
 			foreach (var _rhsSymbol in rhsSymbols)
 			{
 				var rhsSymbol = _rhsSymbol;
 
-				//check if we're using the Length symbol, since our current symbol might be readonly, but our length symbol might not be
+				// Check if we're using the Length symbol, since our current symbol might be readonly, but our length symbol might not be
 				string rhsSymbolName = "this[]";
 				if (rhsSymbol == null || rhsSymbol.IsExtension || rhsSymbol.IsReadOnly || rhsSymbol.ContainingType.IsReadOnly)
 				{
-					//get lhs and rhs of the range, or the the value of the index
+					// Get lhs and rhs of the range, or the the value of the index
 					var rangeLeft = op.Argument switch
 					{
 						IRangeOperation rangeOp => rangeOp.LeftOperand,
@@ -257,7 +254,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 						_ => null,
 					};
 
-					//check for implicit conversion from int -> Index
+					// Check for implicit conversion from int -> Index
 					if (rangeLeft is IConversionOperation convOp1 && convOp1.IsImplicit)
 					{
 						var m = convOp1.Conversion.MethodSymbol;
@@ -275,10 +272,10 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 						}
 					}
 
-					//check if either left or right is an index, or agument is a range
+					// Check if either left or right is an index, or agument is a range
 					if ((op.Argument is not IRangeOperation && op.Argument.Type.Is_System_Range()) || (rangeLeft?.Type?.Is_System_Index() ?? false) || (rangeRight?.Type?.Is_System_Index() ?? false))
 					{
-						//get the length symbol
+						// Get the length symbol
 						var rhsSymbol2 = op.LengthSymbol switch
 						{
 							IMethodSymbol ms => ms,
@@ -286,7 +283,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 							_ => null,
 						};
 
-						//if it's not readonly, then we want to use it instead
+						// If it's not readonly, then we want to use it instead
 						if (rhsSymbol2 != null && !(rhsSymbol2.IsExtension || rhsSymbol2.IsReadOnly || rhsSymbol2.ContainingType.IsReadOnly))
 						{
 							rhsSymbol = rhsSymbol2;
@@ -295,7 +292,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 					}
 				}
 
-				//analyze if we have a method
+				// Analyze if we have a method
 				if (rhsSymbol == null) return;
 				AnalyzeMemberAccess(lhs, rhsSymbol, op, rhsSymbolName, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
@@ -304,20 +301,20 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private void AnalyzeAwait(OperationAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IAwaitOperation op)
 		{
-			//get the lhs
+			// Get the lhs
 			var lhs = op.Operation;
 
-			//get the GetAwaiter method we're calling
+			// Get the GetAwaiter method we're calling
 			if (op.Syntax is AwaitExpressionSyntax syn)
 			{
 				var info = op.SemanticModel.GetAwaitExpressionInfo(syn);
 				if (info.IsDynamic) return;
 				var rhsSymbol = info.GetAwaiterMethod;
 
-				//analyze if we found the GetAwaiter method
+				// Analyze if we found the GetAwaiter method
 				if (rhsSymbol != null) AnalyzeMemberAccess(lhs, rhsSymbol, op, null, ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 			}
 		}
@@ -325,36 +322,36 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeFixedStatement(SyntaxNodeAnalysisContext context, bool runHAM0001, bool runHAM0003)
 	{
-		//run it
+		// Run it
 		if (context.Node is FixedStatementSyntax node)
 		{
-			//get the declaration operation's variables
+			// Get the declaration operation's variables
 			if (context.SemanticModel.GetOperation(node.Declaration) is not IVariableDeclarationOperation declOp) return;
 			var declaredVariables = declOp.GetDeclaredVariables();
 
-			//get the value for each declaration
+			// Get the value for each declaration
 			for (int i = 0; i < node.Declaration.Variables.Count; i++)
 			{
-				//check if we've cancelled already
+				// Check if we've cancelled already
 				context.CancellationToken.ThrowIfCancellationRequested();
 
-				//get the element type of this declaration
+				// Get the element type of this declaration
 				var elementType = declaredVariables[i].Type;
 				if (elementType == null) continue;
 				if (elementType is IPointerTypeSymbol ptrTypeSymbol) elementType = ptrTypeSymbol.PointedAtType;
 				else continue;
 
-				//process the variable declaration
+				// Process the variable declaration
 				VariableDeclaratorSyntax? variable = node.Declaration.Variables[i];
 				if (variable.Initializer?.Value is ExpressionSyntax value)
 				{
-					//check if it's not &, in which case there's no defensive copy
+					// Check if it's not &, in which case there's no defensive copy
 					var op = context.SemanticModel.GetOperation(value.GetOperationExpression());
 					if (op != null)
 					{
 						if (op is not IAddressOfOperation)
 						{
-							//create the syntax as if we had written (op).GetPinnableReference() instead, so that we can find what method it binds to:
+							// Create the syntax as if we had written (op).GetPinnableReference() instead, so that we can find what method it binds to:
 							var getPinnableReferenceInvocation =
 								SyntaxFactory.InvocationExpression
 								(
@@ -369,10 +366,10 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 									)
 								);
 
-							//get the speculative info that will tell us what GetPinnableReference method we're calling
+							// Get the speculative info that will tell us what GetPinnableReference method we're calling
 							var info = context.SemanticModel.GetSpeculativeSymbolInfo(value.GetOperationExpression().SpanStart, getPinnableReferenceInvocation, SpeculativeBindingOption.BindAsExpression);
 
-							//analyze if we found a (non-ambiguous) GetPinnableReference method
+							// Analyze if we found a (non-ambiguous) GetPinnableReference method
 							if (info.Symbol is not IMethodSymbol ms) return;
 							AnalyzeMemberAccess(op, ms, op, "GetPinnableReference", ReadOnlyMemberKind.None, context.CancellationToken, context.ReportDiagnostic, runHAM0001, runHAM0003);
 						}
@@ -393,20 +390,20 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeMemberAccess(IOperation lhs, IMethodSymbol rhsSymbol, IOperation diagnosticLocationOperation, string? rhsSymbolName, ReadOnlyMemberKind forceIncludeReadOnlyMembers, CancellationToken cancellationToken, Action<Diagnostic> reportDiagnostic, bool runHAM0001, bool runHAM0003)
 	{
-		//check if we've cancelled already
+		// Check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
 
-		//check if it's not an applicable rhs (only warn on non-readonly instance struct method call)
-		//additionally, we emulate when C# emits a defensive copy with generics (emit when not constrained to either class / struct, or when method is defined on interface)
+		// Check if it's not an applicable rhs (only warn on non-readonly instance struct method call)
+		// Additionally, we emulate when C# emits a defensive copy with generics (emit when not constrained to either class / struct, or when method is defined on interface)
 		if (((forceIncludeReadOnlyMembers & ReadOnlyMemberKind.SymbolOnly) == 0 && rhsSymbol.IsReadOnly) || rhsSymbol.IsStatic || rhsSymbol.IsExtension) return;
 		var lhsType = lhs.Type!;
 		if (!(lhsType.IsValueType || lhsType.TypeKind == TypeKind.TypeParameter) || lhsType.IsReferenceType || ((forceIncludeReadOnlyMembers & ReadOnlyMemberKind.TypeOnly) == 0 && lhsType.IsReadOnly)) return;
 
-		//check if we've cancelled already
+		// Check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
 
-		//determine whether we're inside a readonly method (affects whether this is passed by ref readonly or not),
-		//whether we're in an allow mutation method (ctor / init), and whether we're in a cctor
+		// Determine whether we're inside a readonly method (affects whether this is passed by ref readonly or not),
+		// Whether we're in an allow mutation method (ctor / init), and whether we're in a cctor
 		bool isReadonlyMember = false;
 		bool isInAllowMutateThisMember = false;
 		ITypeSymbol? typeContainingAnalysisCctor = null;
@@ -427,16 +424,16 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			isReadonlyMember = !methodSymbol.IsExtension && (methodSymbol.IsReadOnly || (!methodSymbol.IsStatic && methodSymbol.ContainingType.IsReadOnly));
 		}
 
-		//check if it's not an applicable lhs (only warn on effective ref readonly)
+		// Check if it's not an applicable lhs (only warn on effective ref readonly)
 		if (!IsLHSRefReadonly(lhs, isReadonlyMember, isInAllowMutateThisMember, typeContainingAnalysisCctor, cancellationToken)) return;
 
-		//check if we're in `[CompilerGenerated]`
+		// Check if we're in `[CompilerGenerated]`
 		if (HasCompilerGeneratedAttributeOrParent(containingSymbol, cancellationToken)) return;
 
-		//check if we've cancelled already
+		// Check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
 
-		//determine if defensive copy is unnecessary
+		// Determine if defensive copy is unnecessary
 		bool isUnnecessary = false;
 		if (rhsSymbol.IsReadOnly || lhsType.IsReadOnly) isUnnecessary = true;
 		if (lhsType.IsValueType && lhsType.TypeKind != TypeKind.TypeParameter && rhsSymbol.ContainingType.SpecialType is SpecialType.System_Object or SpecialType.System_ValueType or SpecialType.System_Enum)
@@ -465,40 +462,40 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			if (impl is IMethodSymbol ms && ms.IsReadOnly) isUnnecessary = true;
 		}
 
-		//check if we've cancelled already
+		// Check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
 
-		//report the diagnostic
-		if (!(isUnnecessary ? runHAM0003 : runHAM0001)) return; //check if we're supposed to report this or not
+		// Report the diagnostic
+		if (!(isUnnecessary ? runHAM0003 : runHAM0001)) return; // Check if we're supposed to report this or not
 		var node = diagnosticLocationOperation.Syntax.GetOperationExpression();
 		reportDiagnostic(Diagnostic.Create(isUnnecessary ? _rule2 : _rule1, node.GetLocation(), rhsSymbolName ?? rhsSymbol.Name, GetOperationSymbolName(lhs)));
 	}
 
 	private static bool IsLHSRefReadonly(IOperation? lhs, bool isReadOnlyMember, bool isInAllowMutateThisMember, ITypeSymbol? typeContainingAnalysisCctor, CancellationToken cancellationToken)
 	{
-		//check if we've cancelled
+		// Check if we've cancelled
 		again:
 		cancellationToken.ThrowIfCancellationRequested();
 
-		//common logic for readonly "field"
-		//false return means it's mutable
+		// Common logic for readonly "field"
+		// False return means it's mutable
 		static bool IsReadonlyAccessToReadonlyFieldLike(bool isStatic, IOperation? lhs, ITypeSymbol containingType, bool isInAllowMutateThisMember, ITypeSymbol? typeContainingAnalysisCctor)
 		{
-			//simple cases
+			// Simple cases
 			if (isStatic && typeContainingAnalysisCctor == null) return true;
 			if (!isStatic && !isInAllowMutateThisMember) return true;
 
-			//check if we're accessing a field directly on the type
+			// Check if we're accessing a field directly on the type
 			if (isStatic) return !SymbolEqualityComparer.Default.Equals(containingType, typeContainingAnalysisCctor);
 			else return lhs != null && lhs is not IInstanceReferenceOperation { ReferenceKind: InstanceReferenceKind.ContainingTypeInstance };
 		}
 
-		//check for ref readonly / in for method, property, local, and parameter
+		// Check for ref readonly / in for method, property, local, and parameter
 		if (lhs is IInvocationOperation invocationOp) return invocationOp.TargetMethod.ReturnsByRefReadonly;
 		if (lhs is IPropertyReferenceOperation propertyRefOp) return propertyRefOp.Property.ReturnsByRefReadonly;
 		if (lhs is ILocalReferenceOperation localRefOp) return localRefOp.Local.RefKind == RefKind.RefReadOnly;
 
-		//check for by-ref parameters specially, and then consider implicit fields caused by primary constructor to pass on their LHS readonly-ness
+		// Check for by-ref parameters specially, and then consider implicit fields caused by primary constructor to pass on their LHS readonly-ness
 		if (lhs is IParameterReferenceOperation paramRefOp)
 		{
 			if (paramRefOp.Parameter.RefKind is RefKind.In
@@ -521,7 +518,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			}
 			if (isPrimaryConstructorParameterOnStruct && isReadOnlyMember)
 			{
-				//check that we're not in a field/property initializer (where no defensive copy is made)
+				// Check that we're not in a field/property initializer (where no defensive copy is made)
 				var op = lhs;
 				if (op?.SemanticModel?.GetEnclosingSymbol(op.Syntax.Span.Start, cancellationToken) is IFieldSymbol or IPropertySymbol) return false;
 				return IsReadonlyAccessToReadonlyFieldLike(false, null, containingType!, isInAllowMutateThisMember, typeContainingAnalysisCctor);
@@ -529,7 +526,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			return false;
 		}
 
-		//check for simple assignment operation, if it's by-ref, then we need to check the LHS
+		// Check for simple assignment operation, if it's by-ref, then we need to check the LHS
 		if (lhs is ISimpleAssignmentOperation simpleAssignOp)
 		{
 			if (simpleAssignOp.IsRef)
@@ -540,7 +537,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			return false;
 		}
 
-		//check for by-ref fields specially, and then consider fields to pass on their LHS readonly-ness
+		// Check for by-ref fields specially, and then consider fields to pass on their LHS readonly-ness
 		if (lhs is IFieldReferenceOperation fieldRefOp)
 		{
 			if (fieldRefOp.Field.RefKind == RefKind.RefReadOnly) return true;
@@ -554,7 +551,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			goto again;
 		}
 
-		//check if either operand of a ternary is applicable
+		// Check if either operand of a ternary is applicable
 		if (lhs is IConditionalOperation conditionalOp && conditionalOp.IsRef)
 		{
 			if (IsLHSRefReadonly(conditionalOp.WhenTrue, isReadOnlyMember, isInAllowMutateThisMember, typeContainingAnalysisCctor, cancellationToken)) return true;
@@ -562,11 +559,11 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			return IsLHSRefReadonly(conditionalOp.WhenFalse, isReadOnlyMember, isInAllowMutateThisMember, typeContainingAnalysisCctor, cancellationToken);
 		}
 
-		//check if this is passed by ref readonly
+		// Check if this is passed by ref readonly
 		if (lhs is IInstanceReferenceOperation iro && iro.ReferenceKind == InstanceReferenceKind.ContainingTypeInstance) return isReadOnlyMember;
 
 #if ROSLYN_4_7_0_OR_GREATER
-		//check for inline array access
+		// Check for inline array access
 		if (lhs is IInlineArrayAccessOperation inlineArrayAccessOp)
 		{
 			if (inlineArrayAccessOp.Argument.Type.Is_System_Range()) return false;
@@ -575,7 +572,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 		}
 #endif
 
-		//check for implicit indexer
+		// Check for implicit indexer
 		if (lhs is IImplicitIndexerReferenceOperation implicitIndexerRefOp)
 		{
 			var indexerSymbol = implicitIndexerRefOp.IndexerSymbol;
@@ -584,13 +581,13 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 			return false;
 		}
 
-		//otherwise, not a ref readonly
+		// Otherwise, not a ref readonly
 		return false;
 	}
 
 	private static string GetOperationSymbolName(IOperation op)
 	{
-		//read name for most, or use a hard coded name for a few, or (unideally - probably indicating a bug) fallback to type name
+		// Read name for most, or use a hard coded name for a few, or (unideally - probably indicating a bug) fallback to type name
 		if (op is IInvocationOperation invocationOp) return invocationOp.TargetMethod.Name;
 		if (op is IPropertyReferenceOperation propertyRefOp) return propertyRefOp.Property.IsIndexer ? "this[]" : propertyRefOp.Property.Name;
 		if (op is ILocalReferenceOperation localRefOp) return localRefOp.Local.Name;
@@ -608,7 +605,7 @@ public sealed class DefensiveCopyAnalyzer : DiagnosticAnalyzer
 	}
 
 
-	//Code to check [CompilerGenerated]:
+	// Code to check [CompilerGenerated]:
 
 	private static bool HasCompilerGeneratedAttribute(ISymbol symbol)
 	{

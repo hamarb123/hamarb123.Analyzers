@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<
 	hamarb123.Analyzers.DefensiveCopies.DefensiveCopyAnalyzer>;
 
@@ -22,7 +17,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value)
 					{
-						//No defensive copies
+						// No defensive copies
 						_ = value.F1;
 						_ = value.rF1;
 						_ = value.P1;
@@ -40,7 +35,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public void M2(in S1 value)
 					{
-						//All defensive copies
+						// All defensive copies
 						_ = {|#0:value.P2|};
 						_ = {|#1:value.rP3|};
 						{|#2:value.E1|} += null;
@@ -58,9 +53,9 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public int F1;
 					public readonly int rF1;
-					public int P1 { get; set; } //readonly get
+					public int P1 { get; set; } // readonly get
 					public int P2 { get => F1; set => F1 = value; }
-					public int P3 { get; } //readonly get
+					public int P3 { get; } // readonly get
 					public readonly int rP1 { get => 0; set { } }
 					public int rP2 { readonly get => 0; set { } }
 					public int rP3 { get => 0; readonly set { } }
@@ -105,7 +100,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S3 value)
 					{
-						//No defensive copies
+						// No defensive copies
 						_ = value.Val.Val.F1;
 						_ = value.Val.Val.rF1;
 						_ = value.Val.Val.P1;
@@ -121,7 +116,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public void M2(in S3 value)
 					{
-						//All defensive copies
+						// All defensive copies
 						_ = {|#0:value.Val.Val.P2|};
 						_ = {|#1:value.Val.Val.rP3|};
 						{|#2:value.Val.Val.E1|} += null;
@@ -138,9 +133,9 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public int F1;
 					public readonly int rF1;
-					public int P1 { get; set; } //readonly get
+					public int P1 { get; set; } // readonly get
 					public int P2 { get => F1; set => F1 = value; }
-					public int P3 { get; } //readonly get
+					public int P3 { get; } // readonly get
 					public readonly int rP1 { get => 0; set { } }
 					public int rP2 { readonly get => 0; set { } }
 					public int rP3 { get => 0; readonly set { } }
@@ -189,7 +184,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S3 value)
 					{
-						//No defensive copies
+						// No defensive copies
 
 						(value.Val.Val.rE) += null;
 						(value.Val.Val.rE) -= null;
@@ -208,15 +203,15 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public void M2(in S3 value)
 					{
-						//All defensive copies
+						// All defensive copies
 
 						({|#0:value.Val.Val.E|}) += null;
 						({|#1:value.Val.Val.E|}) -= null;
 						(({|#2:(((value)).Val.Val).E|})) += null;
 						(({|#3:(((value.Val).Val)).E|})) -= null;
 
-						//(value.Val.Val.P1) = 0;
-						//((((value)).Val.Val).P1) = 0;
+						// (value.Val.Val.P1) = 0;
+						// ((((value)).Val.Val).P1) = 0;
 						_ = ({|#4:value.Val.Val.P1|});
 						_ = ({|#5:(((value)).Val.Val).P1|});
 						{|#6:(value.Val.Val).M()|};
@@ -276,7 +271,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S3 value)
 					{
-						//No defensive copies
+						// No defensive copies
 
 						_ = value.Val.Val.S_RO_R;
 						_ = value.Val.Val.S_RO_R_RO;
@@ -289,7 +284,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S3 value)
 					{
-						//All defensive copies
+						// All defensive copies
 
 						_ = {|#0:value.Val.Val.S_R|};
 						_ = {|#1:value.Val.Val.S_R_RO|};
@@ -302,7 +297,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M3(in S3 value)
 					{
-						//No defensive copies
+						// No defensive copies
 
 						value.Val.Val.S_RO_R.M();
 						value.Val.Val.S_RO_R.rM();
@@ -315,19 +310,19 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M4(in S3 value)
 					{
-						//All defensive copies
+						// All defensive copies
 
-						{|#6:value.Val.Val.S_R|}.M(); //S1
-						{|#7:value.Val.Val.S_R|}.rM(); //S1
-						{|#9:{|#8:value.Val.Val.S_R_RO|}.M()|}; //S1 and S2
-						{|#10:value.Val.Val.S_R_RO|}.rM(); //S1
-						{|#11:value.Val.Val.S_RO_R_RO.M()|}; //S2
+						{|#6:value.Val.Val.S_R|}.M(); // S1
+						{|#7:value.Val.Val.S_R|}.rM(); // S1
+						{|#9:{|#8:value.Val.Val.S_R_RO|}.M()|}; // S1 and S2
+						{|#10:value.Val.Val.S_R_RO|}.rM(); // S1
+						{|#11:value.Val.Val.S_RO_R_RO.M()|}; // S2
 
-						{|#12:value.Val.Val.U_R|}.M(); //S1
-						{|#13:value.Val.Val.U_R|}.rM(); //S1
-						{|#15:{|#14:value.Val.Val.U_R_RO|}.M()|}; //S1 and S2
-						{|#16:value.Val.Val.U_R_RO|}.rM(); //S1
-						{|#17:value.Val.Val.U_RO_R_RO.M()|}; //S2
+						{|#12:value.Val.Val.U_R|}.M(); // S1
+						{|#13:value.Val.Val.U_R|}.rM(); // S1
+						{|#15:{|#14:value.Val.Val.U_R_RO|}.M()|}; // S1 and S2
+						{|#16:value.Val.Val.U_R_RO|}.rM(); // S1
+						{|#17:value.Val.Val.U_RO_R_RO.M()|}; // S2
 					}
 				}
 
@@ -341,13 +336,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public S0 F;
 
-					//scoped refs
+					// Scoped refs
 					public ref S0 S_R => ref Unsafe.NullRef<S0>();
 					public readonly ref S0 S_RO_R => ref Unsafe.NullRef<S0>();
 					public ref readonly S0 S_R_RO => ref Unsafe.NullRef<S0>();
 					public readonly ref readonly S0 S_RO_R_RO => ref Unsafe.NullRef<S0>();
 
-					//unscoped refs
+					// Unscoped refs
 					[UnscopedRef] public ref S0 U_R => ref F;
 					[UnscopedRef] public readonly ref S0 U_RO_R => ref Unsafe.NullRef<S0>();
 					[UnscopedRef] public ref readonly S0 U_R_RO => ref F;
@@ -404,7 +399,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S3 value)
 					{
-						//No defensive copies
+						// No defensive copies
 
 						_ = value.Val.Val[(long)0];
 						_ = value.Val.Val[(ulong)0];
@@ -423,7 +418,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S3 value)
 					{
-						//All defensive copies
+						// All defensive copies
 
 						_ = {|#0:value.Val.Val[(int)0]|};
 						_ = {|#1:value.Val.Val[(uint)0]|};
@@ -490,7 +485,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1, S2 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						value1.rM();
 
 						value2.Value_R.rM();
@@ -517,7 +512,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public void M2(in S1 value1, S2 value2)
 					{
-						//All defensive copies
+						// All defensive copies
 						{|#0:value1.M()|};
 
 						{|#1:value2.Value_R_RO.M()|};
@@ -580,7 +575,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1, S1 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						ref int local = ref Unsafe.NullRef<int>();
 
 						value1.Field_R = 1;
@@ -636,7 +631,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S3 value1, in S1 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						Action x;
 
 						x = value1.Val.Val.M;
@@ -677,7 +672,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public unsafe void M1(in S3* value1, in S1* value2)
 					{
-						//No defensive copies
+						// No defensive copies
 
 						value1->Val.Val.rM();
 						value1->Val.Val.M();
@@ -734,15 +729,15 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				using System;
 				using System.Runtime.CompilerServices;
 
-				//All defensive copies
+				// All defensive copies
 				{|#0:C.X().M1()|};
 
 				public class C
 				{
-					//The ref we will be acting on
+					// The ref we will be acting on
 					public static ref readonly S1 X() => ref Unsafe.NullRef<S1>();
 
-					//All defensive copies
+					// All defensive copies
 					public C() => {|#1:X().M1()|};
 					public C(int a) { {|#2:X().M1()|}; }
 					public void M() => {|#3:X().M1()|};
@@ -865,11 +860,11 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					//All defensive copies
+					// All defensive copies
 					public void A1(in S1 a) => {|#0:a.M1()|};
 					public void B1(ref readonly S1 a) => {|#1:a.M1()|};
 
-					//No defensive copies
+					// No defensive copies
 					public void A2(in S1 a) => a.M2();
 					public void B2(ref readonly S1 a) => a.M2();
 					public void C1(ref S1 a) => a.M1();
@@ -900,7 +895,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public readonly struct S1(S3 a)
 				{
-					//All defensive copies
+					// All defensive copies
 					public void M11() => {|#0:a.M1()|};
 					public void M21() { {|#1:a.M1()|}; }
 					public string P11 => {|#2:a.M1()|};
@@ -936,7 +931,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						set { {|#15:a.M1()|}; }
 					}
 
-					//No defensive copies
+					// No defensive copies
 					public void M12() => a.M2();
 					public void M22() { a.M2(); }
 					public readonly string F1 = a.M1();
@@ -981,7 +976,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public struct S2(S3 a)
 				{
-					//No defensive copies
+					// No defensive copies
 					public void M11() => a.M1();
 					public void M21() { a.M1(); }
 					public readonly string F1 = a.M1();
@@ -1058,13 +1053,13 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						set { a.M2(); }
 					}
 
-					//All defensive copies
+					// All defensive copies
 					public readonly void M31() => {|#16:a.M1()|};
 				}
 
 				public class C1(S3 a)
 				{
-					//No defensive copies
+					// No defensive copies
 					public void M11() => a.M1();
 				}
 

@@ -8,18 +8,18 @@ namespace hamarb123.Analyzers
 {
 	public static class CustomExtensions
 	{
-		//gets the method implementation that will be used for a virtual base method
+		// Gets the method implementation that will be used for a virtual base method
 		public static IMethodSymbol? GetOverrideFor(this ITypeSymbol? type, IMethodSymbol method)
 		{
 			while (type != null)
 			{
-				//loop through all the members that are methods
+				// Loop through all the members that are methods
 				var members = type.GetMembers();
 				foreach (var member in members)
 				{
 					if (member is IMethodSymbol ms)
 					{
-						//check if the overridden method (or any method that it overrides) is the one we're searching for
+						// Check if the overridden method (or any method that it overrides) is the one we're searching for
 						var overridden = ms.OverriddenMethod;
 						while (overridden != null)
 						{
@@ -29,7 +29,7 @@ namespace hamarb123.Analyzers
 					}
 				}
 
-				//go to next base type
+				// Go to next base type
 				type = type.BaseType;
 			}
 			return null;
@@ -277,9 +277,10 @@ namespace hamarb123.Analyzers
 			};
 		}
 
-		//determines if the msbuild project properties specify that we are in the include list (or true if no include list)
-		public static bool ShouldRun(this AnalyzerOptions options, string diagnosticCode)
+		// Determines if the msbuild project properties specify that we are in the include list (or true if no include list)
+		public static bool ShouldRun(this AnalyzerOptions options, string diagnosticCode, bool isStyleAnalyzer = false)
 		{
+			// Check if we have an include list specified:
 			if (options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.Hamarb123AnalyzersDiagnosticsIncludeList", out string? value))
 			{
 				var sp = value.AsSpan().Trim();
@@ -287,7 +288,7 @@ namespace hamarb123.Analyzers
 				{
 					do
 					{
-						//find next separator (or end), compare the trimmed version to our expected diagnostic code, then move to next if different
+						// Find next separator (or end), compare the trimmed version to our expected diagnostic code, then move to next if different
 						var idx = sp.IndexOfAny(',', ';');
 						if (idx < 0) idx = sp.Length;
 						if (sp.Slice(0, idx).Trim().Equals(diagnosticCode.AsSpan(), StringComparison.Ordinal)) return true;
@@ -298,7 +299,20 @@ namespace hamarb123.Analyzers
 				}
 			}
 
-			//no include-list specified
+			// If it's a style analyzer, then base off the style analyzer configuration property
+			if (isStyleAnalyzer)
+			{
+				if (options.AnalyzerConfigOptionsProvider.GlobalOptions.TryGetValue("build_property.Hamarb123AnalyzersEnableStyleAnalyzers", out string? value2))
+				{
+					var sp = value2.AsSpan().Trim();
+					if (sp.Length > 0)
+					{
+						return !sp.Equals("false".AsSpan(), StringComparison.OrdinalIgnoreCase);
+					}
+				}
+			}
+
+			// Otherwise, default to true if nothing is specified
 			return true;
 		}
 

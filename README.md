@@ -12,6 +12,7 @@ NuGet link:
 - [Nullable If Analyser (VB.NET Only)](#nullable-if-analyser-vbnet-only)
 - [FixedAddressValueType Analyzer](#fixedaddressvaluetype-analyzer)
 - [GC Retrack Analyzer](#gc-retrack-analyzer)
+- [Pass By In Analyzer](#pass-by-in-analyzer)
 
 
 ## Configuration
@@ -22,6 +23,16 @@ For example:
 ```xml
 <Hamarb123AnalyzersDiagnosticsIncludeList>HAM0001;HAM0003</Hamarb123AnalyzersDiagnosticsIncludeList>
 ```
+
+For the style-only analyzers, if you want to just disable them but have all the rest enabled, you can leave the include list empty and instead set:
+```xml
+<Hamarb123AnalyzersEnableStyleAnalyzers>false</Hamarb123AnalyzersEnableStyleAnalyzers>
+```
+
+The default is to run all analyzers, but you can use the include list or the style analyzer configuration property to only run a subset of them if you prefer.
+
+The current style analyzers are:
+- `HAM0008` (info) - [Pass By In Analyzer](#pass-by-in-analyzer)
 
 
 ## Defensive Copies Analysers (C# Only)
@@ -179,4 +190,33 @@ The analyzer attempts to not warn superfluously, but there will be some false po
 The solution to a diagnostic is to either pull out the retrack operation to a byref local variable, to pull out the side effects out of the consumption site so that the delay until function call is not an issue, or to suppress the diagnostic if it's not an issue and you do not want to change the code itself.
 
 Note: the analyzer reports based on what is correct in the latest version of roslyn (that we have updated for), even if you're compiling on an earlier version.
+
+
+## Pass By In Analyzer
+
+This style analyzer (`HAM0008`) analyzes method calls where a parameter that is marked `in` receives a value that is not passed by `in` but could be.
+
+For example:
+```csharp
+class Class1
+{
+	public void M1(in Struct1 s)
+	{
+		// ...
+	}
+
+	public void M2(Struct1 s)
+	{
+		M1(s); // Diagnostic: HAM0008 - s could be passed by in
+		M1(in s); // No diagnostic - s is passed by reference
+		M1(ref s); // No diagnostic - s is passed by reference
+		M1(new Struct1()); // No diagnostic - value does not have a location
+	}
+}
+
+struct Struct1
+{
+	// ...
+}
+```
 

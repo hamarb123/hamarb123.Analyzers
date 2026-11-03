@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 using VerifyVB = hamarb123.Analyzers.Test.VisualBasicAnalyzerVerifier<
 	hamarb123.Analyzers.NullableConditions.NullableConditionAnalyzer>;
 
@@ -31,7 +26,7 @@ namespace hamarb123.Analyzers.Test.NullableConditions
 					End Function
 
 					Public Sub M1()
-						'No nullable if statements
+						' No nullable if statements
 						If True Then
 						End If
 
@@ -64,7 +59,7 @@ namespace hamarb123.Analyzers.Test.NullableConditions
 					End Sub
 
 					Public Sub M2()
-						'All nullable if statements
+						' All nullable if statements
 						If {|#0:CType(True, Boolean?)|} Then
 						End If
 

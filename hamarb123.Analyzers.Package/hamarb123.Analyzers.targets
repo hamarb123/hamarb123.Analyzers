@@ -3,6 +3,7 @@
 		<ItemGroup>
 			<!--Make property visible to roslyn-->
 			<CompilerVisibleProperty Include="Hamarb123AnalyzersDiagnosticsIncludeList" />
+			<CompilerVisibleProperty Include="Hamarb123AnalyzersEnableStyleAnalyzers" />
 		</ItemGroup>
 		<PropertyGroup>
 			<!--Ensure there are no newlines in the input-->

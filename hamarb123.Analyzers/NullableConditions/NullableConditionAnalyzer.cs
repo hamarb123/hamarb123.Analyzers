@@ -24,11 +24,11 @@ public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 
 	public override void Initialize(AnalysisContext context)
 	{
-		//configure options
+		// Configure options
 		context.EnableConcurrentExecution();
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics); //todo: do we want None?
 
-		//register callback
+		// Register callback
 		context.RegisterCompilationStartAction((context) =>
 		{
 			if (context.Options.ShouldRun("HAM0002")) context.RegisterOperationAction(AnalyzeOperation, OperationKind.Conditional);
@@ -37,20 +37,20 @@ public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 
 	private void AnalyzeOperation(OperationAnalysisContext context)
 	{
-		//get the operation
+		// Get the operation
 		var op = (IConditionalOperation)context.Operation;
 
 		switch (op.Condition)
 		{
 			case IInvocationOperation i:
 			{
-				//check if we have an implicit call to Nullable<bool>.GetValueOrDefault
+				// Check if we have an implicit call to Nullable<bool>.GetValueOrDefault
 				if (i.IsImplicit && i.Type?.SpecialType == SpecialType.System_Boolean && !i.TargetMethod.IsStatic
 					&& i.TargetMethod.ContainingType.Is_System_Nullable_1(out var t2) && t2.SpecialType == SpecialType.System_Boolean
 					&& i.TargetMethod.ReturnType.SpecialType == SpecialType.System_Boolean && i.TargetMethod.Parameters.Length == 0
 					)
 				{
-					//report the diagnostic
+					// Report the diagnostic
 					goto report;
 				}
 
@@ -58,10 +58,10 @@ public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 			}
 			case IConversionOperation c:
 			{
-				//check if we're implicitly converting with an IConversionOperation (e.g. for 'Nothing', but not for 'New TypeWithConversionToBoolean()')
+				// Check if we're implicitly converting with an IConversionOperation (e.g. for 'Nothing', but not for 'New TypeWithConversionToBoolean()')
 				if (c.IsImplicit && c.Type?.SpecialType == SpecialType.System_Boolean && !c.Conversion.IsUserDefined)
 				{
-					//report the diagnostic
+					// Report the diagnostic
 					goto report;
 				}
 
@@ -69,10 +69,10 @@ public sealed class NullableConditionAnalyzer : DiagnosticAnalyzer
 			}
 		}
 
-		//nothing to report
+		// Nothing to report
 		return;
 
-		//goto statement to report the diagnostic
+		// Goto statement to report the diagnostic
 		report:
 		context.ReportDiagnostic(Diagnostic.Create(_rule, op.Condition.Syntax.GetLocation(), op.Condition.Syntax.ToString()));
 	}

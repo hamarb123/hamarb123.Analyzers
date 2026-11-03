@@ -24,11 +24,11 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 
 	public sealed override void Initialize(AnalysisContext context)
 	{
-		//configure options
+		// Configure options
 		context.EnableConcurrentExecution();
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
-		//register callback
+		// Register callback
 		context.RegisterCompilationStartAction((context) =>
 		{
 			if (context.Options.ShouldRun("HAM0004")) context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
@@ -37,14 +37,14 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 
 	private static void AnalyzeInvocation(OperationAnalysisContext context)
 	{
-		//run it
+		// Run it
 		if (context.Operation is IInvocationOperation op)
 		{
-			//check if we're calling a method on string
+			// Check if we're calling a method on string
 			var method = op.TargetMethod;
 			if (method.ContainingType.SpecialType != SpecialType.System_String) return;
 
-			//check if it's a problematic method name
+			// Check if it's a problematic method name
 			var problematic = (method.IsStatic, method.Name) switch
 			{
 				(_, "Compare") => true,
@@ -57,14 +57,14 @@ public sealed class StringNonOrdinalAnalyzer : DiagnosticAnalyzer
 			};
 			if (!problematic) return;
 
-			//check if our first parameter is a string
+			// Check if our first parameter is a string
 			var parameters = method.Parameters;
 			if (parameters.Length == 0 || parameters[0].Type.SpecialType != SpecialType.System_String) return;
 
-			//check if we don't take a StringComparison or CultureInfo parameter
+			// Check if we don't take a StringComparison or CultureInfo parameter
 			if (!parameters.Any((x) => x.Type.Is_System_StringComparison() || x.Type.Is_System_Globalization_CultureInfo()))
 			{
-				//report diagnostic
+				// Report diagnostic
 				context.ReportDiagnostic(Diagnostic.Create(_rule, op.Syntax.GetLocation(), method.Name));
 			}
 		}

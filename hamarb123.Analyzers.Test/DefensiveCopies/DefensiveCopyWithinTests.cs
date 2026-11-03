@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xunit;
+﻿using Xunit;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<
 	hamarb123.Analyzers.DefensiveCopies.DefensiveCopyAnalyzer>;
 
@@ -23,7 +18,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					public S1 Value;
 					public void M1()
 					{
-						//No defensive copies
+						// No defensive copies
 						this.Value.rM();
 						Value.rM();
 
@@ -44,7 +39,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public void M2()
 					{
-						//No defensive copies
+						// No defensive copies
 						this.Value.M();
 						Value.M();
 
@@ -63,7 +58,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public readonly void rM1()
 					{
-						//No defensive copies
+						// No defensive copies
 						this.Value.rM();
 						Value.rM();
 
@@ -88,7 +83,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public readonly void rM2()
 					{
-						//All defensive copies
+						// All defensive copies
 						{|#0:this.Value.M()|};
 						{|#1:Value.M()|};
 
@@ -151,7 +146,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1()
 					{
-						//No defensive copies
+						// No defensive copies
 						rM();
 						this.rM();
 
@@ -180,7 +175,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public void M2()
 					{
-						//No defensive copies
+						// No defensive copies
 						M();
 						this.M();
 
@@ -206,7 +201,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public readonly void rM1()
 					{
-						//No defensive copies
+						// No defensive copies
 						rM();
 						this.rM();
 
@@ -243,7 +238,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					}
 					public readonly void rM2()
 					{
-						//All defensive copies
+						// All defensive copies
 						{|#0:M()|};
 						{|#1:this.M()|};
 
@@ -308,7 +303,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyPossibleFalsePositives()
 		{
-			//this could probably do with some more tests
+			// This could probably do with some more tests
 
 			const string source = """
 				using System;
@@ -318,7 +313,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public readonly void M1(ref C value1, C value2, in C value3)
 					{
-						//No defensive copies
+						// No defensive copies
 						rM();
 						this.rM();
 
@@ -337,7 +332,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 			await VerifyCS.VerifyAnalyzerAsync(source);
 		}
 
-		//CS8656
+		// CS8656
 		[Fact]
 		public async Task VerifyWithinAccessors()
 		{
@@ -347,7 +342,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public struct C
 				{
-					//No defensive copies
+					// No defensive copies
 					public int P1 => M2();
 					public int P2
 					{
@@ -366,7 +361,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						set => M1();
 					}
 
-					//All defensive copies
+					// All defensive copies
 					public readonly int rP1 => {|#0:M2()|};
 					public readonly int rP2
 					{
@@ -405,7 +400,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						readonly set => {|#11:M1()|};
 					}
 
-					//Helper methods
+					// Helper methods
 					public void M1() { }
 					public int M2() => 0;
 				}

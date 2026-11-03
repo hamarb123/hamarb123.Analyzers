@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Testing;
+﻿using Microsoft.CodeAnalysis.Testing;
 using Xunit;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<
 	hamarb123.Analyzers.DefensiveCopies.DefensiveCopyAnalyzer>;
@@ -21,7 +16,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					//All defensive copies
+					// All defensive copies
 					public static void X1<T>(in T value) where T : IDisposable
 					{
 						{|#0:value.Dispose()|};
@@ -55,7 +50,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						{|#7:value.Dispose()|};
 					}
 
-					//No defensive copies
+					// No defensive copies
 					public static void X9<T>(in T value) where T : class, IDisposable
 					{
 						value.Dispose();
@@ -103,10 +98,10 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1)
 					{
-						//No defensive copies
+						// No defensive copies
 						string result;
 
-						//result = value1.X1();
+						// result = value1.X1();
 						result = value1.X2();
 					}
 				}
@@ -117,7 +112,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public static class Ext
 				{
-					//public static string X1<T>(this in T value) where T : struct => "";
+					// public static string X1<T>(this in T value) where T : struct => "";
 					public static string X2(this in S1 value) => "";
 				}
 				""";
@@ -135,7 +130,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(bool b, ref S1 value1, ref S1 value2, in S1 value3, in S1 value4)
 					{
-						//No defensive copies
+						// No defensive copies
 						Console.WriteLine((b ? ref value1 : ref value2).M1());
 						Console.WriteLine((b ? value1 : value2).M1());
 						Console.WriteLine((b ? value3 : value2).M1());
@@ -145,7 +140,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(bool b, ref S1 value1, ref S1 value2, in S1 value3, in S1 value4)
 					{
-						//All defensive copies
+						// All defensive copies
 						Console.WriteLine({|#0:(b ? ref value3 : ref value2).M1()|});
 						Console.WriteLine({|#1:(b ? ref value1 : ref value4).M1()|});
 						Console.WriteLine({|#2:(b ? ref value3 : ref value4).M1()|});
@@ -176,7 +171,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1, ref S1 value2, in S1 c, ref readonly S1 d, ref S1 e, out S1 f)
 					{
-						//No defensive copies
+						// No defensive copies
 						ref readonly S1 a = ref value1;
 						ref S1 b = ref value2;
 						f = default;
@@ -210,7 +205,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S1 value1, ref S1 value2, in S1 c, ref readonly S1 d)
 					{
-						//All defensive copies
+						// All defensive copies
 						ref readonly S1 a = ref value1;
 						scoped RS1 g = default;
 
@@ -325,7 +320,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyStringInterpolation()
 		{
-			//always derefs for the function call
+			// Always derefs for the function call
 			const string source = """
 				using System;
 
@@ -372,7 +367,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 					{
 						outParam = default;
 
-						//No defensive copies
+						// No defensive copies
 						arr[0].X();
 						__refvalue(typedref, S1).X();
 						outParam.X();
@@ -404,7 +399,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 						Span<S1> span, in Span<S1> spanIn, ref Span<S1> spanRef
 					)
 					{
-						//No defensive copies
+						// No defensive copies
 						rospan[0].M2();
 						rospanIn[0].M2();
 						rospanRef[0].M2();
@@ -427,7 +422,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(ReadOnlySpan<S1> rospan, in ReadOnlySpan<S1> rospanIn, ref ReadOnlySpan<S1> rospanRef)
 					{
-						//All defensive copies
+						// All defensive copies
 						{|#0:rospan[0].M1()|};
 						{|#1:rospanIn[0].M1()|};
 						{|#2:rospanRef[0].M1()|};
@@ -460,7 +455,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in Buffer buf1, ref Buffer buf2)
 					{
-						//No defensive copies
+						// No defensive copies
 						buf1[0].M2();
 						buf1[^1].M2();
 						buf1[2..4][^1].M2();
@@ -479,7 +474,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in Buffer buf1)
 					{
-						//All defensive copies
+						// All defensive copies
 						{|#0:buf1[0].M1()|};
 						{|#1:buf1[^1].M1()|};
 						{|#2:buf1[2..4][^1].M1()|};
@@ -517,7 +512,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(in S1 value1, ref S1 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						unchecked(value1).M2();
 						checked(value1).M2();
 
@@ -530,7 +525,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S1 value1)
 					{
-						//All defensive copies
+						// All defensive copies
 						{|#0:unchecked(value1).M1()|};
 						{|#1:checked(value1).M1()|};
 					}
@@ -560,7 +555,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(ref S1 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						value2.X[0].ToString();
 						(value2.X[0]).ToString();
 
@@ -570,7 +565,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public void M2(in S1 value1)
 					{
-						//All defensive copies (except that compiler doesn't emit them as such)
+						// All defensive copies (except that compiler doesn't emit them as such)
 						value1.X[0].ToString();
 						(value1.X[0]).ToString();
 
@@ -591,7 +586,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 		[Fact]
 		public async Task VerifyEnums()
 		{
-			//https://github.com/dotnet/roslyn/issues/72016
+			// https://github.com/dotnet/roslyn/issues/72016
 			const string source = """
 				using System;
 
@@ -599,14 +594,14 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public void M1(ref E1 value1, E1 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						value1.ToString();
 						value2.ToString();
 					}
 
 					public void M2<T1, T2>(in E1 value1, in T1 value2, in T2 value3) where T1 : Enum where T2 : struct, Enum
 					{
-						//All defensive copies (unnecessary)
+						// All defensive copies (unnecessary)
 						{|#0:value1.ToString()|};
 						{|#1:value2.ToString()|};
 						{|#2:value3.ToString()|};
@@ -638,7 +633,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public unsafe void M1(in S1 value1, in RS1 value2)
 					{
-						//No defensive copies
+						// No defensive copies
 						_ = nameof(S1);
 						_ = nameof(value1);
 						_ = nameof(value1.M1);
@@ -702,7 +697,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public unsafe void M1(in S1 value)
 					{
-						//No defensive copies
+						// No defensive copies
 						ref int a1 = ref Unsafe.NullRef<int>();
 						ref readonly int b1 = ref Unsafe.NullRef<int>();
 						ref S1 a2 = ref Unsafe.NullRef<S1>();
@@ -733,7 +728,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 					public unsafe void M2(in S1 value)
 					{
-						//All defensive copies
+						// All defensive copies
 						ref int a1 = ref Unsafe.NullRef<int>();
 						ref readonly int b1 = ref Unsafe.NullRef<int>();
 						ref S1 a2 = ref Unsafe.NullRef<S1>();
@@ -824,7 +819,7 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public unsafe void M1(in S1 value1, ref S1 value2, S1 value3)
 					{
-						//No defensive copies
+						// No defensive copies
 						Consume(value1.M1);
 						Consume(value1.M2);
 						Consume(value2.M1);
@@ -1041,10 +1036,10 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 				{
 					public S2() : this(default, default, default, default)
 					{
-						//_field1.M();
-						//_field2[0].M();
-						//_field3.Field.M();
-						//_field4.Field.M();
+						// _field1.M();
+						// _field2[0].M();
+						// _field3.Field.M();
+						// _field4.Field.M();
 					}
 					public int P1
 					{

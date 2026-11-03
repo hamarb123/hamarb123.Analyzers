@@ -33,20 +33,20 @@ public sealed class FAVTFieldTypeAnalyzer : DiagnosticAnalyzer
 
 	public sealed override void Initialize(AnalysisContext context)
 	{
-		//configure options
+		// Configure options
 		context.EnableConcurrentExecution();
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
-		//register callbacks
+		// Register callbacks
 		context.RegisterCompilationStartAction(CompilationStartAction);
 	}
 
 	private void CompilationStartAction(CompilationStartAnalysisContext context)
 	{
-		//get the enabled analysers
+		// Get the enabled analysers
 		bool runHAM0005 = context.Options.ShouldRun("HAM0005"), runHAM0006 = context.Options.ShouldRun("HAM0006");
 
-		//if at least 1 is enabled, register them all
+		// If at least 1 is enabled, register them all
 		if (runHAM0005 || runHAM0006)
 		{
 			ConcurrentDictionary<IPropertySymbol, IFieldSymbol?> backingFieldCache = [];
@@ -85,7 +85,7 @@ public sealed class FAVTFieldTypeAnalyzer : DiagnosticAnalyzer
 
 	private static bool HasFixedAddressValueTypeAttribute(ImmutableArray<AttributeData> attributes, CancellationToken cancellationToken)
 	{
-		//loop through all attributes, looking for FixedAddressValueTypeAttribute
+		// Loop through all attributes, looking for FixedAddressValueTypeAttribute
 		foreach (var attribute in attributes.AsSpan())
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -96,10 +96,10 @@ public sealed class FAVTFieldTypeAnalyzer : DiagnosticAnalyzer
 
 	private void AnalyzeFieldDeclaration(ITypeSymbol fieldType, bool isStatic, Location diagnosticLocation, string? fieldName, CancellationToken cancellationToken, Action<Diagnostic> reportDiagnostic, bool runHAM0005, bool runHAM0006)
 	{
-		//if error type, skip
+		// If error type, skip
 		if (fieldType.TypeKind == TypeKind.Error) return;
 
-		//determine if known wrong: not static, not struct / generic type, is primitive or enum, or is reference type
+		// Determine if known wrong: not static, not struct / generic type, is primitive or enum, or is reference type
 		bool definitelyWrong =
 			!isStatic ||
 			fieldType.TypeKind is not (TypeKind.Struct or TypeKind.TypeParameter) ||
@@ -107,20 +107,20 @@ public sealed class FAVTFieldTypeAnalyzer : DiagnosticAnalyzer
 			fieldType.IsReferenceType ||
 			(fieldType.TypeKind == TypeKind.TypeParameter && ((ITypeParameterSymbol)fieldType).ConstraintTypes.Any((x) => x.SpecialType == SpecialType.System_Enum));
 
-		//determine if possibly wrong: either not known to be a value type, or is a generic type parameter (we can't be sure it's not a primitive or enum)
+		// Determine if possibly wrong: either not known to be a value type, or is a generic type parameter (we can't be sure it's not a primitive or enum)
 		bool potentiallyWrong =
 			definitelyWrong ||
 			!fieldType.IsValueType ||
 			fieldType.TypeKind == TypeKind.TypeParameter;
 
-		//if it can't be wrong, exit
+		// If it can't be wrong, exit
 		if (!potentiallyWrong) return;
 
-		//check if we've cancelled already
+		// Check if we've cancelled already
 		cancellationToken.ThrowIfCancellationRequested();
 
-		//report the diagnostic
-		if (!(definitelyWrong ? runHAM0005 : runHAM0006)) return; //check if we're supposed to report this or not
+		// Report the diagnostic
+		if (!(definitelyWrong ? runHAM0005 : runHAM0006)) return; // Check if we're supposed to report this or not
 		reportDiagnostic(Diagnostic.Create(definitelyWrong ? _rule1 : _rule2, diagnosticLocation, fieldName ?? "", fieldType.ToDisplayString()));
 	}
 }

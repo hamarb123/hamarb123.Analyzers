@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Testing;
-using Xunit;
+﻿using Xunit;
 using VerifyCS = hamarb123.Analyzers.Test.CSharpAnalyzerVerifier<
 	hamarb123.Analyzers.DefensiveCopies.DefensiveCopyAnalyzer>;
 
@@ -21,10 +15,10 @@ namespace hamarb123.Analyzers.Test.DefensiveCopies
 
 				public class C
 				{
-					//The ref we will be acting on
+					// The ref we will be acting on
 					public static ref readonly S1 X() => ref Unsafe.NullRef<S1>();
 
-					//All defensive copies
+					// All defensive copies
 					[CompilerGenerated] public C() => X().M1();
 					[CompilerGenerated] public C(int a) { X().M1(); }
 					[CompilerGenerated] public void M() => X().M1();

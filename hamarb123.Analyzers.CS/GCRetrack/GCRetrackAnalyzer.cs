@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -29,11 +28,11 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	public sealed override void Initialize(AnalysisContext context)
 	{
-		//configure options
+		// Configure options
 		context.EnableConcurrentExecution();
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 
-		//register callbacks
+		// Register callbacks
 		context.RegisterCompilationStartAction(CompilationStartAction);
 	}
 
@@ -49,27 +48,27 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	private void AnalyzeArgumentSyntax(SyntaxNodeAnalysisContext context, ConcurrentDictionary<SyntaxNode, bool> doneReports)
 	{
-		//check if it's a gc retrack operation
+		// Check if it's a gc retrack operation
 		var node = context.Node as ArgumentSyntax;
 		if (node is null) return;
 		if (!IsArgumentSyntaxByRef(node, context.SemanticModel)) return;
 		var byrefOperand = node.Expression.GetOperationExpression();
 		if (!IsImportantGCRetrackExpression(byrefOperand, context.SemanticModel)) return;
 
-		//analyze it
+		// Analyze it
 		if (context.SemanticModel.GetOperation(byrefOperand, context.CancellationToken) is not { } byrefOperandOp) return;
 		AnalyzeRefOperandCandidate(context, byrefOperandOp, doneReports);
 	}
 
 	private void AnalyzeRefExpression(SyntaxNodeAnalysisContext context, ConcurrentDictionary<SyntaxNode, bool> doneReports)
 	{
-		//check if it's a gc retrack operation
+		// Check if it's a gc retrack operation
 		var node = context.Node as RefExpressionSyntax;
 		if (node is null) return;
 		var byrefOperand = node.Expression.GetOperationExpression();
 		if (!IsImportantGCRetrackExpression(byrefOperand, context.SemanticModel)) return;
 
-		//analyze it
+		// Analyze it
 		if (context.SemanticModel.GetOperation(byrefOperand, context.CancellationToken) is not { } byrefOperandOp) return;
 		AnalyzeRefOperandCandidate(context, byrefOperandOp, doneReports);
 	}
@@ -85,14 +84,14 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	private void AnalyzeRefOperandCandidate(SyntaxNodeAnalysisContext context, IOperation byrefOperandOp, ConcurrentDictionary<SyntaxNode, bool> doneReports)
 	{
-		//check if we're in a conditional expression, in which case we just take 1 of them
+		// Check if we're in a conditional expression, in which case we just take 1 of them
 		while (byrefOperandOp.Parent is IConditionalOperation { IsRef: true }) byrefOperandOp = byrefOperandOp.Parent;
 
-		//find the parent which is consuming it
+		// Find the parent which is consuming it
 		var consumingParent = byrefOperandOp.Parent;
 		while (consumingParent is not null)
 		{
-			//these are the consuming parents we recognise
+			// These are the consuming parents we recognise
 			if (consumingParent is ISimpleAssignmentOperation { IsRef: true }) break;
 			if (consumingParent is IVariableDeclaratorOperation { Symbol.IsRef: true }) break;
 			if (consumingParent is IReturnOperation) break;
@@ -104,25 +103,25 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 				break;
 			}
 
-			//these are the operations that mean we've missed the consuming operation, so we just exit & assume it's fine
+			// These are the operations that mean we've missed the consuming operation, so we just exit & assume it's fine
 			if (consumingParent is IExpressionStatementOperation) return;
 			if (consumingParent is IMethodBodyBaseOperation) return;
 			if (consumingParent is ILocalFunctionOperation) return;
 			if (consumingParent is IAnonymousFunctionOperation) return;
 			if (consumingParent is ILoopOperation) return;
 
-			//otherwise, just go to parent
+			// Otherwise, just go to parent
 			consumingParent = consumingParent.Parent;
 		}
 		if (consumingParent is null) return;
 
-		//loop upwards & check if later operations might depend on the gc retrack
+		// Loop upwards & check if later operations might depend on the gc retrack
 		var parent = byrefOperandOp.Parent!;
 		var lastParent = byrefOperandOp;
 		bool mightNeedPriorRetrack = false;
 		while (lastParent != consumingParent && parent is not null && !mightNeedPriorRetrack)
 		{
-			//move past current child
+			// Move past current child
 			var enumerator = parent.ChildOperations.GetEnumerator();
 			while (true)
 			{
@@ -134,7 +133,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 				}
 			}
 
-			//check if any of the other children might depend on it
+			// Check if any of the other children might depend on it
 			do
 			{
 				if (MightNeedPriorRetrack(enumerator.Current, new()))
@@ -145,14 +144,14 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 			}
 			while (enumerator.MoveNext());
 
-			//move to next parent
+			// Move to next parent
 			next:
 			lastParent = parent;
 			parent = parent.Parent;
 		}
 		if (!mightNeedPriorRetrack) return;
 
-		//report the diagnostic
+		// Report the diagnostic
 		var syntax = byrefOperandOp.Syntax;
 		while (true)
 		{
@@ -166,10 +165,10 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	private static bool IsImportantGCRetrackExpression(SyntaxNode operand, SemanticModel semanticModel)
 	{
-		//check if it's a gc retrack expresion at all
+		// Check if it's a gc retrack expresion at all
 		if (!IsGCRetrackExpression(operand, semanticModel, out var pointerOp)) return false;
 
-		//check if it's just to a local (or constant value), in which case it doesn't matter
+		// Check if it's just to a local (or constant value), in which case it doesn't matter
 		while (pointerOp.Type is IPointerTypeSymbol or { SpecialType: SpecialType.System_Int64 or SpecialType.System_UInt64 or SpecialType.System_IntPtr or SpecialType.System_UIntPtr or SpecialType.System_Int32 or SpecialType.System_UInt32 })
 		{
 			if (pointerOp is IConversionOperation { OperatorMethod: null } co)
@@ -273,12 +272,12 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 
 	private static bool MightNeedPriorRetrack(IOperation? op, CallerInfo callerInfo)
 	{
-		//try to have handling for as many ops as possible - some might not be fully handled, or recognize every case that is fine, but that's okay since the worst case is a false positive
-		//most false positives can likely be fixed by just adding more known side-effect-free types / methods / properties
-		//the idea here is to not warn unnecessarily for something like 'MyMethod(ref *x, 1.ToString() != null)', as even though the retrack doesn't occur immediately, it also doesn't matter since there's no way you could observe the retrack not having happened yet
-		//note: we assume that the user isn't doing things like adding custom page fault handlers that could run arbitrary code, or modifying IL at runtime, etc.
-		//note: we assume that a type with the same full name as a type in the BCL behaves the same way as that type in the BCL.
-		//note: for simplicity we assume that gc retracks don't have any effects on textually prior gc retracks being correct (e.g., M(ref *ptr1, ref Unsafe.AsRef<int>(ptr2), ...)' could release a ptr1 pin if ptr2 moves, but this would require UB as you could never guarantee the timing of ptr2 retrack).
+		// Try to have handling for as many ops as possible - some might not be fully handled, or recognize every case that is fine, but that's okay since the worst case is a false positive
+		// Most false positives can likely be fixed by just adding more known side-effect-free types / methods / properties
+		// The idea here is to not warn unnecessarily for something like 'MyMethod(ref *x, 1.ToString() != null)', as even though the retrack doesn't occur immediately, it also doesn't matter since there's no way you could observe the retrack not having happened yet
+		// Note: we assume that the user isn't doing things like adding custom page fault handlers that could run arbitrary code, or modifying IL at runtime, etc.
+		// Note: we assume that a type with the same full name as a type in the BCL behaves the same way as that type in the BCL.
+		// Note: for simplicity we assume that gc retracks don't have any effects on textually prior gc retracks being correct (e.g., M(ref *ptr1, ref Unsafe.AsRef<int>(ptr2), ...)' could release a ptr1 pin if ptr2 moves, but this would require UB as you could never guarantee the timing of ptr2 retrack).
 		while (true)
 		{
 			if (op is null) return false;
@@ -363,12 +362,12 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		}
 	}
 
-	//note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
+	// Note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
 	private static bool IsTypeSideEffectFree(ITypeSymbol? type) => IsTypeSideEffectFree(type, out _, out _, out _);
-	private static bool IsTypeFullySideEffectFree(ITypeSymbol? type) => IsTypeSideEffectFree(type, out _, out var isFormatEqualsHashCodeCompareToAlwaysSafe, out _) && isFormatEqualsHashCodeCompareToAlwaysSafe; //used when we might be calling ToString() / formatting / Equals() / GetHashCode() / CompareTo() on the type - all other members should be also checked with IsTypeSideEffectFree
+	private static bool IsTypeFullySideEffectFree(ITypeSymbol? type) => IsTypeSideEffectFree(type, out _, out var isFormatEqualsHashCodeCompareToAlwaysSafe, out _) && isFormatEqualsHashCodeCompareToAlwaysSafe; // Used when we might be calling ToString() / formatting / Equals() / GetHashCode() / CompareTo() on the type - all other members should be also checked with IsTypeSideEffectFree
 	private static bool IsTypeSideEffectFree(ITypeSymbol? type, out bool areAllMethodsOnAllInstancesSafe, out bool isFormatEqualsHashCodeCompareToAlwaysSafe, out bool areAllStaticMembersSafe)
 	{
-		areAllMethodsOnAllInstancesSafe = true; // all members, other than .Equals(), .GetHashCode(), .CompareTo(), and formatting methods, are side-effect free on all instances of this type
+		areAllMethodsOnAllInstancesSafe = true; // All members, other than .Equals(), .GetHashCode(), .CompareTo(), and formatting methods, are side-effect free on all instances of this type
 		isFormatEqualsHashCodeCompareToAlwaysSafe = true;
 		areAllStaticMembersSafe = true;
 		if (type == null) return true;
@@ -399,7 +398,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		return false;
 	}
 
-	//note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
+	// Note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
 	private static bool IsPropertySideEffectFree(IPropertySymbol? property)
 	{
 		if (property == null) return true;
@@ -409,7 +408,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		return false;
 	}
 
-	//note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
+	// Note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
 	private static bool IsMethodSideEffectFree(IMethodSymbol? method, out bool allowRefsAlways)
 	{
 		allowRefsAlways = false;
@@ -447,7 +446,7 @@ public sealed class GCRetrackAnalyzer : DiagnosticAnalyzer
 		return false;
 	}
 
-	//note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
+	// Note: the only relevant side effects here are those that could affect GC tracking (e.g., something that could free a GCHandle)
 	private static bool IsSymbolSideEffectFree(ISymbol? symbol)
 	{
 		if (symbol is ITypeSymbol ts) return IsTypeSideEffectFree(ts);
