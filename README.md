@@ -200,17 +200,23 @@ For example:
 ```csharp
 class Class1
 {
-	public void M1(in Struct1 s)
+	public void M1(Struct1 s)
+	{
+		M2(s); // Diagnostic: HAM0008 - s could be passed by in
+		M2(in s); // No diagnostic - s is passed by reference
+		M2(ref s); // No diagnostic - s is passed by reference
+		M2(new Struct1()); // No diagnostic - value does not have a location
+		M3(s); // Already covered by CS9193, so no HAM0008
+	}
+
+	public void M2(in Struct1 s)
 	{
 		// ...
 	}
 
-	public void M2(Struct1 s)
+	public void M3(ref readonly Struct1 s)
 	{
-		M1(s); // Diagnostic: HAM0008 - s could be passed by in
-		M1(in s); // No diagnostic - s is passed by reference
-		M1(ref s); // No diagnostic - s is passed by reference
-		M1(new Struct1()); // No diagnostic - value does not have a location
+		// ...
 	}
 }
 
