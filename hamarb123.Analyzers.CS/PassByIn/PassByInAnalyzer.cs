@@ -17,7 +17,7 @@ public sealed class PassByInAnalyzer : DiagnosticAnalyzer
 	private const string Description1 = "Arguments should be passed by in when possible.";
 	private const string Category1 = "Style";
 
-	private static readonly DiagnosticDescriptor _rule1 = new(DiagnosticId1, Title1, MessageFormat1, Category1, DiagnosticSeverity.Info, isEnabledByDefault: true, description: Description1, customTags: [WellKnownDiagnosticTags.NotConfigurable]);
+	private static readonly DiagnosticDescriptor _rule1 = new(DiagnosticId1, Title1, MessageFormat1, Category1, DiagnosticSeverity.Info, isEnabledByDefault: true, description: Description1);
 
 #pragma warning disable IDE0303 // Simplify collection initialization
 	private static readonly ImmutableArray<DiagnosticDescriptor> _rules = ImmutableArray.Create(_rule1);
